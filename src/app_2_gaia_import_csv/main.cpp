@@ -1,9 +1,9 @@
 #include <fstream>
 #include <iostream>
-#include <Thx.h>
-#include <CsvParser.h>
-#include <ExportToSql.h>
 #include <Compression.h>
+#include "Thx.h"
+#include "CsvParser.h"
+#include "ExportToSql.h"
 #include "ConcurrentJob.h"
 #include "ExportProgressManager.h"
 #include "GaiaRowProcessor.h"

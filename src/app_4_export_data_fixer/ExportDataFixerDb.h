@@ -1,6 +1,6 @@
 #pragma once
 #include <pqxx/pqxx>
-#include <PostgresBatchUpdate.h>
+#include "PostgresBatchUpdate.h"
 
 using namespace std;
 using namespace thxsoft::database::postgres;

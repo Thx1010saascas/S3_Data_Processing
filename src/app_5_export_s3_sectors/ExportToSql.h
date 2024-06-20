@@ -1,6 +1,6 @@
 #pragma once
-#include <SqliteBatchUpdate.h>
-#include <PostgresBatchUpdate.h>
+#include "SqliteBatchUpdate.h"
+#include "PostgresBatchUpdate.h"
 #include "CelestialObject.h"
 
 using namespace std;

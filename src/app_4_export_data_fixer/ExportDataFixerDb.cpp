@@ -1,8 +1,7 @@
 #include "ExportDataFixerDb.h"
-#include <Thx.h>
 #include <spdlog/spdlog.h>
 #include <pqxx/pqxx>
-
+#include "Thx.h"
 #include "DatabaseUtils.h"
 
 using namespace pqxx;

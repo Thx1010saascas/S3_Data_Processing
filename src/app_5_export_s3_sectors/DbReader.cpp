@@ -1,9 +1,8 @@
 #include "DbReader.h"
-#include <Thx.h>
 #include <spdlog/spdlog.h>
 #include <pqxx/pqxx>
-#include <Sector.h>
-
+#include "Thx.h"
+#include "Sector.h"
 #include "AstronomyConverter.h"
 #include "SpectralClassifier.h"
 

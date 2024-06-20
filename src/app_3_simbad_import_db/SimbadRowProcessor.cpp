@@ -1,11 +1,10 @@
 #include "SimbadRowProcessor.h"
 #include <format>
-#include <AstronomyConverter.h>
-#include <LuminanceCalculator.h>
-#include <RadiusCalculator.h>
-#include <TeffCalculator.h>
 #include <spdlog/spdlog.h>
-
+#include "AstronomyConverter.h"
+#include "LuminanceCalculator.h"
+#include "RadiusCalculator.h"
+#include "TeffCalculator.h"
 #include "GalacticCoordinate.h"
 #include "SimbadObjectType.h"
 #include "Thx.h"

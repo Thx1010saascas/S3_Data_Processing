@@ -1,8 +1,8 @@
 #pragma once
 #include <pqxx/pqxx>
 #include <SqliteBatchUpdate.h>
-#include <CelestialObject.h>
-#include <SpectralClassifier.h>
+#include "CelestialObject.h"
+#include "SpectralClassifier.h"
 
 using namespace std;
 

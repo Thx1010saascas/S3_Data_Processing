@@ -1,5 +1,5 @@
 #include "GreekLatinConverter.h"
-#include <Thx.h>
+#include "Thx.h"
 
 namespace thxsoft::export_data_fixer_db
 {

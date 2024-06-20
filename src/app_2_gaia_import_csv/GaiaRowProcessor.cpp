@@ -1,10 +1,10 @@
 #include "GaiaRowProcessor.h"
 
 #include <format>
-#include <AstronomyConverter.h>
-#include <LuminanceCalculator.h>
-#include <RadiusCalculator.h>
-#include <TeffCalculator.h>
+#include "AstronomyConverter.h"
+#include "LuminanceCalculator.h"
+#include "RadiusCalculator.h"
+#include "TeffCalculator.h"
 
 using namespace thxsoft::astronomy;
 

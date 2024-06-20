@@ -25,6 +25,7 @@ target_link_libraries(app_5_export_s3_sectors
         thxsoft_common::thxsoft_common
         thxsoft_database::thxsoft_database
         thxsoft_database_postgres::thxsoft_database_postgres
+        thxsoft_database_sqlite::thxsoft_database_sqlite
         spdlog::spdlog_header_only
         unofficial::sqlite3::sqlite3
         libpqxx::pqxx
