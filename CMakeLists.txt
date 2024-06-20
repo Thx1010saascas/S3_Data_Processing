@@ -11,7 +11,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(BUILD_TYPE "Release")
 endif()
 
-set(ThxSoftLibrary "/Programming/Libs/${BUILD_TYPE}")
+set(ThxSoftLibrary "C:/Programming/Libs/${BUILD_TYPE}")
 set(ThxSoftIncludes "${ThxSoftLibrary}/Include")
 set(ThxSoftLibs "${ThxSoftLibrary}/Lib")
 set(ThxSoftDLLs "${ThxSoftLibrary}/Bin")

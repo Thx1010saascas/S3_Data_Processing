@@ -59,7 +59,6 @@ int main(const int argc, const char *argv[])
         auto nextRecordIndex = dbQuery.getLastRecordIndexAsync();
         auto recordsImportedCount = dbQuery.getRecordCountAsync();
 
-        nextRecordIndex = 0;
         if(recordsImportedCount > 0)
             spdlog::info("Resuming the upload from record index {:L} with {:L} entries in the database.", nextRecordIndex == -1 ? 0 : nextRecordIndex, recordsImportedCount);
 
