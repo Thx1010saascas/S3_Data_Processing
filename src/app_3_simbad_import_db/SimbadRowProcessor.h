@@ -7,7 +7,7 @@ using namespace thxsoft::common;
 
 class SimbadRowProcessor {
 public:
-    static bool processRow(double minparallax, const CsvParser& csvParser);
+    static bool processRow(double minParallax, const CsvParser& csvParser);
 
     static constexpr uint32_t hash(const char *s, int off = 0) noexcept;
 

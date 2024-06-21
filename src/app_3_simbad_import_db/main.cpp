@@ -44,7 +44,7 @@ int main(const int argc, const char *argv[])
         LoggingSetup::SetupDefaultLogging("logs/3_SimbadImportData.log");
 
         const auto simbadUrl = string(argv[1]);
-        const auto postgresCnxString = argv[2];
+        const auto *const postgresCnxString = argv[2];
         const auto minParallax = 1.0/(stoi(argv[3]) / 3.26156378) * 1000; // Parallax to ly
 
         const auto startTime = chrono::high_resolution_clock::now();
@@ -66,7 +66,7 @@ int main(const int argc, const char *argv[])
 
         curlpp::Easy request;
         const auto result = make_shared<stringstream>();
-        const auto handle = request.getCurlHandle().getHandle();
+        auto *const handle = request.getCurlHandle().getHandle();
         request.setOpt(cURLpp::Options::WriteStream(result.get()));
         request.setOpt(cURLpp::Options::Timeout(300));
         request.setOpt(cURLpp::Options::BufferSize(20 * 1024 * 1024));
@@ -114,7 +114,6 @@ int main(const int argc, const char *argv[])
         }
 
         dbWriter.commit();
-
 
         spdlog::info("Finished {:L}, added {:L} records in {}.", nextRecordIndex, recordsImportedCount, Thx::toDurationString(startTime));
 

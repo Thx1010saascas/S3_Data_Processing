@@ -11,11 +11,11 @@
 
 using namespace thxsoft::astronomy;
 
-bool SimbadRowProcessor::processRow(const double minparallax, const CsvParser& csvParser)
+bool SimbadRowProcessor::processRow(const double minParallax, const CsvParser& csvParser)
 {
     const auto parallax = csvParser.getValueAsDouble(ParallaxColumnName).value();
 
-    if(parallax < minparallax)
+    if(parallax < minParallax)
         return false;
 
     if (csvParser.getValue(TeffColumnName).empty())
@@ -89,6 +89,7 @@ void SimbadRowProcessor::populateNames(const CsvParser& csvParser)
         if(!cleanName.starts_with('['))
             names.push_back(cleanName);
     }
+
     for(const auto& name : cats)
     {
         if(name.starts_with("NAME "))
@@ -102,7 +103,9 @@ void SimbadRowProcessor::populateNames(const CsvParser& csvParser)
             csvParser.setValue(SourceIdColumnName, Thx::trim(name.substr(strlen("Gaia DR3 "))));
     }
 
-    // Puke, but we need precidence...
+    if(csvParser.getValue(Name1ColumnName).find("Wolf ") != string::npos)
+        return;
+    // Puke, but we need precedence...
     // A space at the end of the catalogue name is important.
     appendIfInCatalog(cats, names, "* ");
     appendIfInCatalog(cats, names, "** ");
@@ -240,7 +243,7 @@ string SimbadRowProcessor::getCleanName(const string& value)
         name = value.substr(strlen("NAME "));
     }
 
-    name = Thx::trim(name);
+    name = Thx::trim(value);
 
     return name;
 }
