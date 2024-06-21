@@ -242,8 +242,10 @@ string SimbadRowProcessor::getCleanName(const string& value)
     {
         name = value.substr(strlen("NAME "));
     }
+    else
+        name = value;
 
-    name = Thx::trim(value);
+    name = Thx::trim(name);
 
     return name;
 }
