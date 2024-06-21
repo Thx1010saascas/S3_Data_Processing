@@ -67,7 +67,13 @@ void SimbadRowProcessor::appendIfInCatalog(const vector<string>& cats, vector<st
     {
         if(cat.starts_with(catalogue))
         {
-            names.push_back(getCleanName(cat));
+            const auto name = getCleanName(cat);
+
+            // No duplicates.
+            if(ranges::find(names, name) != names.end())
+                return;
+
+            names.push_back(name);
         }
     }
 }
@@ -77,19 +83,21 @@ void SimbadRowProcessor::populateNames(const CsvParser& csvParser)
     const auto cats = Thx::split(csvParser.getValue(Name1ColumnName), "|");
     auto names = vector<string>();
 
+    if(const auto mainId = csvParser.getValue(MainIdColumnName); mainId.starts_with("NAME "))
     {
-        const auto mainId = csvParser.getValue(MainIdColumnName);
-
-        if(mainId.starts_with("NAME "))
-            names.push_back(getCleanName(mainId));
-        else if(!mainId.starts_with("Gaia") && mainId.find("*") == string::npos && hasUpperAndLower(mainId))
-            names.push_back(getCleanName(mainId));
+        const auto cleanName = getCleanName(mainId);
+        if(!cleanName.starts_with('['))
+            names.push_back(cleanName);
     }
-
     for(const auto& name : cats)
     {
         if(name.starts_with("NAME "))
-            names.push_back(getCleanName(name));
+        {
+            const auto cleanName = getCleanName(name);
+
+            if(!cleanName.starts_with('[') && ranges::find(names, cleanName) == names.end())
+                names.push_back(cleanName);
+        }
         else if(name.starts_with("Gaia DR3 "))
             csvParser.setValue(SourceIdColumnName, Thx::trim(name.substr(strlen("Gaia DR3 "))));
     }

@@ -107,15 +107,14 @@ int main(const int argc, const char *argv[])
                 recordsImportedCount++;
 
                 dbWriter.append(csvParser);
-
-                if (csvParser.lineNumber() == 0)
-                    break;
             }
+
+            if (csvParser.lineNumber() == 0)
+                stop = true;
         }
 
         dbWriter.commit();
 
-        curl_global_cleanup();
 
         spdlog::info("Finished {:L}, added {:L} records in {}.", nextRecordIndex, recordsImportedCount, Thx::toDurationString(startTime));
 
