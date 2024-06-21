@@ -103,8 +103,6 @@ void SimbadRowProcessor::populateNames(const CsvParser& csvParser)
             csvParser.setValue(SourceIdColumnName, Thx::trim(name.substr(strlen("Gaia DR3 "))));
     }
 
-    if(csvParser.getValue(Name1ColumnName).find("Wolf ") != string::npos)
-        return;
     // Puke, but we need precedence...
     // A space at the end of the catalogue name is important.
     appendIfInCatalog(cats, names, "* ");
