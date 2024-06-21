@@ -61,65 +61,50 @@ bool SimbadRowProcessor::hasUpperAndLower(const string& string)
     return false;
 }
 
-void SimbadRowProcessor::appendIfNotOk(vector<string>& collection, const string& text, const bool checkCatalogueName)
+void SimbadRowProcessor::appendIfInCatalog(const vector<string>& cats, vector<string>& names, const string& catalogue)
 {
-    const auto name = getCleanName(text);
-
-    if(checkCatalogueName)
+    for(const auto& cat : cats)
     {
-        if(name.starts_with('['))
-            return;
-
-        if(!(
-            name.starts_with('Wolf') ||
-            name.starts_with("Kepler"))
-            )
-            return;
+        if(cat.starts_with(catalogue))
+        {
+            names.push_back(getCleanName(cat));
+        }
     }
-
-    if(ranges::find(collection, name) != collection.end())
-        return;
-
-    collection.push_back(name);
 }
 
 void SimbadRowProcessor::populateNames(const CsvParser& csvParser)
 {
     const auto cats = Thx::split(csvParser.getValue(Name1ColumnName), "|");
     auto names = vector<string>();
-    const auto mainId = csvParser.getValue(MainIdColumnName);
 
-    // Puke, but multiple iterations are necessary for easy naming precidence while in dev, at least.
-    if(mainId.starts_with("NAME "))
-        appendIfNotOk(names, mainId, false);
-    else if(!mainId.starts_with("Gaia") && mainId.find("*") == string::npos && hasUpperAndLower(mainId))
-        appendIfNotOk(names, mainId, false);
+    {
+        const auto mainId = csvParser.getValue(MainIdColumnName);
+
+        if(mainId.starts_with("NAME "))
+            names.push_back(getCleanName(mainId));
+        else if(!mainId.starts_with("Gaia") && mainId.find("*") == string::npos && hasUpperAndLower(mainId))
+            names.push_back(getCleanName(mainId));
+    }
 
     for(const auto& name : cats)
     {
         if(name.starts_with("NAME "))
-            appendIfNotOk(names, name, false);
+            names.push_back(getCleanName(name));
         else if(name.starts_with("Gaia DR3 "))
             csvParser.setValue(SourceIdColumnName, Thx::trim(name.substr(strlen("Gaia DR3 "))));
     }
 
-    for(const auto& name : cats)
-    {
-        if(name.starts_with("*"))
-            appendIfNotOk(names, name, false);
-    }
-
-    for(const auto& name : cats)
-    {
-        if(hasUpperAndLower(name))
-            appendIfNotOk(names, name, true);
-    }
-
-    for(const auto& name : cats)
-    {
-        if(name.starts_with("HIP ") || name.starts_with("HD "))
-            appendIfNotOk(names, name, false);
-    }
+    // Puke, but we need precidence...
+    // A space at the end of the catalogue name is important.
+    appendIfInCatalog(cats, names, "* ");
+    appendIfInCatalog(cats, names, "** ");
+    appendIfInCatalog(cats, names, "V* ");
+    appendIfInCatalog(cats, names, "Wolf ");
+    appendIfInCatalog(cats, names, "Ross ");
+    appendIfInCatalog(cats, names, "HD ");
+    appendIfInCatalog(cats, names, "GJ ");
+    appendIfInCatalog(cats, names, "Gaia DR3 ");
+    appendIfInCatalog(cats, names, "2MASS ");
 
     csvParser.setValue(Name1ColumnName, names.empty() ? "" : Thx::deleteDuplicateSpaces(names[0]));
     csvParser.setValue(Name2ColumnName, names.size() > 1 ? Thx::deleteDuplicateSpaces(names[1]) : "");
@@ -238,22 +223,13 @@ void SimbadRowProcessor::populateGalacticCoordinates(const CsvParser& csvParser)
 
 string SimbadRowProcessor::getCleanName(const string& value)
 {
-    if (value == "")
-        return "";
+    if (value.empty())
+        return value;
 
     string name;
     if (value.starts_with("NAME "))
     {
         name = value.substr(strlen("NAME "));
-    }
-    else
-    {
-        const auto starIndex = value.find_last_of('*');
-
-        if (starIndex != string::npos)
-            name = value.substr(starIndex + 1);
-        else
-            name = value;
     }
 
     name = Thx::trim(name);

@@ -37,7 +37,7 @@ public:
 private:
     static bool setTeffFromCalculation(const CsvParser& csvParser);
     static bool hasUpperAndLower(const string& string);
-    static void appendIfNotOk(vector<string>& collection, const string& text, bool checkCatalogueName);
+    static void appendIfInCatalog(const vector<string>& cats, vector<string>& names, const string& catalogue);
     static void populateNames(const CsvParser& csvParser);
     static void populateObjectType(const CsvParser& csvParser);
     static void populateLuminosityAndRadius(const CsvParser& csvParser);
