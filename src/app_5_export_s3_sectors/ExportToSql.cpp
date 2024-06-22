@@ -15,7 +15,7 @@ namespace thxsoft::export_s3_sectors
         if (sqlite3_open(dbFilePath.c_str(), &_db))
             throw invalid_argument(std::format("Error opening database: {}.", sqlite3_errmsg(_db)));
 
-        createTable();
+        createTable(ExportTableName);
 
         spdlog::info("Writing data to {}.", dbFilePath);
 
@@ -31,7 +31,7 @@ namespace thxsoft::export_s3_sectors
     {
         _batchAdder->commit();
 
-        addTableIndexes();
+        finaliseTableCeation();
         vacuumTable();
 
         sqlite3_close_v2(_db);
@@ -53,7 +53,7 @@ namespace thxsoft::export_s3_sectors
             );
     }
 
-    void ExportToSql::createTable() const
+    void ExportToSql::createTable(const string& tableName) const
     {
         sqlite3_exec(_db, "PRAGMA journal_mode = MEMORY", nullptr, nullptr, nullptr);
         sqlite3_exec(_db, "PRAGMA locking_mode = EXCLUSIVE", nullptr, nullptr, nullptr);
@@ -68,12 +68,12 @@ namespace thxsoft::export_s3_sectors
                                           "IsBinary INTEGER NOT NULL,"
                                           "X INTEGER NOT NULL,"
                                           "Y INTEGER NOT NULL,"
-                                          "Z INTEGER NOT NULL);", ExportTableName);
+                                          "Z INTEGER NOT NULL);", tableName);
 
         sqlite3_exec(_db, createTableCommand.c_str(), nullptr, nullptr, nullptr);
     }
 
-    void ExportToSql::addTableIndexes() const
+    void ExportToSql::finaliseTableCeation() const
     {
         spdlog::info("Indexing database column 'Sector'...");
         sqlite3_exec(_db, std::format("CREATE INDEX Sector_Idx ON {0} (Sector  ASC);", ExportTableName).c_str(), nullptr, nullptr, nullptr);
@@ -82,10 +82,10 @@ namespace thxsoft::export_s3_sectors
         sqlite3_exec(_db, std::format("CREATE INDEX Name1_Idx ON {0} (lower(Name1) ASC);", ExportTableName).c_str(), nullptr, nullptr, nullptr);
 
         spdlog::info("Indexing database column 'Name2'...");
-        sqlite3_exec(_db, std::format("CREATE INDEX Name1_Idx ON {0} (lower(Name2) ASC);", ExportTableName).c_str(), nullptr, nullptr, nullptr);
+        sqlite3_exec(_db, std::format("CREATE INDEX Name2_Idx ON {0} (lower(Name2) ASC);", ExportTableName).c_str(), nullptr, nullptr, nullptr);
 
         spdlog::info("Indexing database column 'Name3'...");
-        sqlite3_exec(_db, std::format("CREATE INDEX Name1_Idx ON {0} (lower(Name3) ASC);", ExportTableName).c_str(), nullptr, nullptr, nullptr);
+        sqlite3_exec(_db, std::format("CREATE INDEX Name3_Idx ON {0} (lower(Name3) ASC);", ExportTableName).c_str(), nullptr, nullptr, nullptr);
     }
 
     void ExportToSql::vacuumTable() const
