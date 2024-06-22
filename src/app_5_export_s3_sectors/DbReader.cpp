@@ -53,8 +53,8 @@ namespace thxsoft::export_s3_sectors
                 }
 
                 dbTransaction.for_stream(selectString, [&]
-                (const long long index, const char* name1, const char* name2, const char* name3, const char* name4, const double parallax, const optional<int> teff,
-                    const char* spectralType, const optional<double> metalicity, const optional<double> luminosity, const optional<double> radius,
+                (const long long index, const char* name1, const char* name2, const char* name3, const char* name4, const double parallax, const optional<double> teff,
+                    const optional<string>& spectralType, const optional<double> metalicity, const optional<double> luminosity, const optional<double> radius,
                     const optional<double> magVB, const double x, const double y, const double z, const optional<long long> sourceId,
                     const bool isBinary, const optional<int> type){
 
@@ -64,16 +64,16 @@ namespace thxsoft::export_s3_sectors
                     celestialObject.name3 = name3 == nullptr ? "" : name3;
                     celestialObject.name4 = name4 == nullptr ? "" : name4;
                     celestialObject.parallax = parallax;
-                    celestialObject.teff = teff.has_value() ? &teff.value() : nullptr;
-                    celestialObject.spectralType = spectralType == nullptr ? "" : spectralType;
-                    celestialObject.metallicity = metalicity.has_value() ? &metalicity.value() : nullptr;
-                    celestialObject.luminosity = luminosity.has_value() ? &luminosity.value() : nullptr;
-                    celestialObject.radius = radius.has_value() ? &radius.value() : nullptr;
-                    celestialObject.magnitudeVorB = magVB.has_value() ? &magVB.value() : nullptr;
+                    celestialObject.teff = teff;
+                    celestialObject.spectralType = spectralType;
+                    celestialObject.metallicity = metalicity;
+                    celestialObject.luminosity = luminosity;
+                    celestialObject.radius = radius;
+                    celestialObject.magnitudeVorB = magVB;
                     celestialObject.x = x;
                     celestialObject.y = y;
                     celestialObject.z = z;
-                    celestialObject.sourceId = sourceId.has_value() ? &sourceId.value() : nullptr;
+                    celestialObject.sourceId = sourceId;
                     celestialObject.isBinary = isBinary;
                     celestialObject.type = static_cast<SimbadObjectTypes>(type.has_value() ? type.value() : 0);
 
@@ -86,13 +86,13 @@ namespace thxsoft::export_s3_sectors
                         sy >= 0 ? 'P' : 'N', abs(sy),
                         sz >= 0 ? 'P' : 'N', abs(sz));
 
-                    if(celestialObject.spectralType.empty() && celestialObject.teff != nullptr)
+                    if(celestialObject.spectralType.has_value() && celestialObject.teff)
                     {
                         double mag; // Puke, there has to be a better way.
                         const double* absoluteMagnitude = nullptr;
-                        if(celestialObject.magnitudeVorB != nullptr)
+                        if(celestialObject.magnitudeVorB.has_value())
                         {
-                            mag = astronomy::AstronomyConverter::toAbsoluteMagnitude(celestialObject.parsecs, *celestialObject.magnitudeVorB);
+                            mag = astronomy::AstronomyConverter::toAbsoluteMagnitude(celestialObject.parsecs, celestialObject.magnitudeVorB.value());
 
                             absoluteMagnitude = &mag;
                         }

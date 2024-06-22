@@ -11,11 +11,11 @@ int main(const int argc, const char *argv[])
 {
     try
     {
-        if(argc != 4)
+        if(argc != 2)
         {
             cerr << "Syntax: app_4_export_data_fixer <Postgres Connection>" << endl;
             cerr << "Populates the 'export_overrides' table with Latin and Greek abbreviations converted to full names." << endl;
-            cerr << "After creation, rows can be manually updated to force difference names or specral type." << endl;
+            cerr << "After creation, rows can be manually updated to force difference names or spectral type." << endl;
             return -1;
         }
 

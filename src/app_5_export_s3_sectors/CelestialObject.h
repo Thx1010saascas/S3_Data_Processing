@@ -14,19 +14,19 @@ namespace thxsoft::export_s3_sectors
         string name2;
         string name3;
         string name4;
-        string spectralType;
+        optional<string> spectralType;
         string sectorId;
-        const int* teff;
+        optional<double> teff;
         double parallax;
         double parsecs;
-        const double* magnitudeVorB;
-        const double* radius;
-        const double* luminosity;
-        const double* metallicity;
+        optional<double> magnitudeVorB;
+        optional<double> radius;
+        optional<double> luminosity;
+        optional<double> metallicity;
         double x;
         double y;
         double z;
-        const long long* sourceId;
+        optional<long long> sourceId;
         bool isBinary;
         SimbadObjectTypes type;
 
