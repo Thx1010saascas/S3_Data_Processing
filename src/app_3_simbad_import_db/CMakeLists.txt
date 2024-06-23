@@ -30,7 +30,7 @@ target_link_libraries(app_3_simbad_import_db
         libpqxx::pqxx
 )
 
-add_custom_command(TARGET app_3_simbad_import_db POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${ThxSoftDLLs}"
-        $<TARGET_FILE_DIR:app_3_simbad_import_db>)
+#add_custom_command(TARGET app_3_simbad_import_db POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory
+#        "${ThxSoftDLLs}"
+#        $<TARGET_FILE_DIR:app_3_simbad_import_db>)

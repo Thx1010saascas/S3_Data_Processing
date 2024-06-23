@@ -19,7 +19,7 @@ target_link_libraries(app_1_gaia_csv_downloader
         unofficial::curlpp::curlpp
         unofficial::gumbo::gumbo)
 
-add_custom_command(TARGET app_1_gaia_csv_downloader POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${ThxSoftDLLs}"
-        $<TARGET_FILE_DIR:app_1_gaia_csv_downloader>)
+#add_custom_command(TARGET app_1_gaia_csv_downloader POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory
+#        "${ThxSoftDLLs}"
+#        $<TARGET_FILE_DIR:app_1_gaia_csv_downloader>)

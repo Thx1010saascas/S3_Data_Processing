@@ -30,7 +30,7 @@ target_link_libraries(app_2_gaia_import_csv
         ZLIB::ZLIB
 )
 
-add_custom_command(TARGET app_2_gaia_import_csv POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${ThxSoftDLLs}"
-        $<TARGET_FILE_DIR:app_2_gaia_import_csv>)
+#add_custom_command(TARGET app_2_gaia_import_csv POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory
+#        "${ThxSoftDLLs}"
+#        $<TARGET_FILE_DIR:app_2_gaia_import_csv>)

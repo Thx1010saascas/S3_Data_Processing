@@ -31,7 +31,7 @@ target_link_libraries(app_5_export_s3_sectors
         libpqxx::pqxx
 )
 
-add_custom_command(TARGET app_5_export_s3_sectors POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${ThxSoftDLLs}"
-        $<TARGET_FILE_DIR:app_5_export_s3_sectors>)
+#add_custom_command(TARGET app_5_export_s3_sectors POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory
+#        "${ThxSoftDLLs}"
+#        $<TARGET_FILE_DIR:app_5_export_s3_sectors>)
