@@ -9,7 +9,7 @@ add_executable(app_3_simbad_import_db
 set_target_properties(app_3_simbad_import_db PROPERTIES OUTPUT_NAME "3_SimbadImportData")
 
 find_package(spdlog REQUIRED)
-find_package(unofficial-curlpp CONFIG REQUIRED)
+find_package(CURL REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)
 
 include("${ThxSoftLibrary}/cmake/thxsoft_astronomy/thxsoft_astronomyTargets.cmake")
@@ -26,11 +26,6 @@ target_link_libraries(app_3_simbad_import_db
         thxsoft_database_postgres::thxsoft_database_postgres
         thxsoft_web::thxsoft_web
         spdlog::spdlog_header_only
-        unofficial::curlpp::curlpp
+        CURL::libcurl
         libpqxx::pqxx
 )
-
-add_custom_command(TARGET app_3_simbad_import_db POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${ThxSoftDLLs}"
-        $<TARGET_FILE_DIR:app_3_simbad_import_db>)

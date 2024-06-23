@@ -1,6 +1,6 @@
 add_subdirectory(app_1_gaia_csv_downloader)
-add_subdirectory(app_2_gaia_import_csv)
-add_subdirectory(app_3_simbad_import_db)
-add_subdirectory(app_4_export_data_fixer)
-add_subdirectory(app_5_export_s3_sectors)
+#add_subdirectory(app_2_gaia_import_csv)
+#add_subdirectory(app_3_simbad_import_db)
+#add_subdirectory(app_4_export_data_fixer)
+#add_subdirectory(app_5_export_s3_sectors)
 

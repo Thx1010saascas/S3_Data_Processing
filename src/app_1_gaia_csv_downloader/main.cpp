@@ -1,11 +1,8 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
-
 #include <ConcurrentJob.h>
-#include <curlpp/Easy.hpp>
-#include <curlpp/Options.hpp>
-#include <utility>
+#include <curl/curl.h>
 #include "gumbo.h"
 #include "LoggingSetup.h"
 #include "Thx.h"
@@ -54,6 +51,12 @@ void find_definitions(vector<string>& links, vector<int>& sizes, const GumboNode
         find_definitions(links, sizes, static_cast<GumboNode *>(children->data[i]));
     }
 }
+size_t write_data(const char *ptr, const size_t size, const size_t nmemb, void *userdata) {
+    auto *stream = static_cast<ostream*>(userdata);
+    const size_t count = size * nmemb;
+    stream->write(ptr, count);
+    return count;
+}
 int downloadCsv(const ThreadData* data)
 {
     try
@@ -62,14 +65,18 @@ int downloadCsv(const ThreadData* data)
 
         ofstream fileOutputStream(data->csvFilePath, ios::binary);
 
-        curlpp::Easy request;
+        const auto curl = curl_easy_init();
 
-        request.setOpt(curlpp::options::Url(data->url));
-        request.setOpt(curlpp::options::WriteStream(&fileOutputStream));
+        curl_easy_setopt(curl, CURLOPT_URL, data->url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &fileOutputStream);
 
-        request.perform();
+        if(const auto res = curl_easy_perform(curl); res != CURLE_OK)
+            throw runtime_error(format("Failed to download file '{0}': {1}", data->csvFilePath.filename().string(), curl_easy_strerror(res)));
 
         fileOutputStream.flush();
+
+        curl_easy_cleanup(curl);
 
         delete data;
     }
@@ -97,7 +104,12 @@ int main(const int argc, const char *argv[])
         const auto csvPath = filesystem::path(argv[2]);
         const auto maxConcurrentDownloads = argc == 4 ? stol(argv[3]) : 50;
 
+        if (!exists(csvPath))
+            create_directory(csvPath);
+
         auto concurrentJobs = vector<future<int>>();
+
+        curl_global_init(CURL_GLOBAL_ALL);
 
         vector<future<int>> concurrentJobs1;
         spdlog::info("Downloading Gaia CSV data.");
@@ -157,15 +169,27 @@ int main(const int argc, const char *argv[])
 void getCsvDownloads(const string& url, vector<string>& fileLinks, vector<int>& fileSizes)
 {
     ostringstream os;
-    os << curlpp::options::Url(url);
-    const auto streamData = os.str();
 
-    GumboOutput *output = gumbo_parse_with_options(&kGumboDefaultOptions, streamData.data(), streamData.length());
+    const auto curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &os);
+
+    if(const auto res = curl_easy_perform(curl); res != CURLE_OK)
+        throw runtime_error(format("Failed to get file list from '{0}': {1}", url, curl_easy_strerror(res)));
+
+    os.flush();
+
+    const auto downloadData = os.str();
+
+    curl_easy_cleanup(curl);
+
+    GumboOutput *output = gumbo_parse_with_options(&kGumboDefaultOptions, downloadData.data(), downloadData.length());
 
     find_definitions(fileLinks, fileSizes, output->root);
 
     if(fileLinks.size() != fileSizes.size())
-        throw exception("Gaia website structure changed! Aborting.");
+        throw runtime_error("Gaia website structure changed! Aborting.");
 
     gumbo_destroy_output(&kGumboDefaultOptions, output);
 }

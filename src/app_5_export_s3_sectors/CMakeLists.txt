@@ -9,10 +9,6 @@ add_executable(app_5_export_s3_sectors
 )
 set_target_properties(app_5_export_s3_sectors PROPERTIES OUTPUT_NAME "5_ExportS3Database")
 
-find_package(spdlog REQUIRED)
-find_package(libpqxx CONFIG REQUIRED)
-find_package(unofficial-sqlite3 CONFIG REQUIRED)
-
 include("${ThxSoftLibrary}/cmake/thxsoft_astronomy/thxsoft_astronomyTargets.cmake")
 include("${ThxSoftLibrary}/cmake/thxsoft_common/thxsoft_commonTargets.cmake")
 include("${ThxSoftLibrary}/cmake/thxsoft_database/thxsoft_databaseTargets.cmake")
@@ -26,12 +22,4 @@ target_link_libraries(app_5_export_s3_sectors
         thxsoft_database::thxsoft_database
         thxsoft_database_postgres::thxsoft_database_postgres
         thxsoft_database_sqlite::thxsoft_database_sqlite
-        spdlog::spdlog_header_only
-        unofficial::sqlite3::sqlite3
-        libpqxx::pqxx
 )
-
-add_custom_command(TARGET app_5_export_s3_sectors POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${ThxSoftDLLs}"
-        $<TARGET_FILE_DIR:app_5_export_s3_sectors>)

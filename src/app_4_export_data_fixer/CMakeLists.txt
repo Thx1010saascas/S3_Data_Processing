@@ -27,8 +27,3 @@ target_link_libraries(app_4_export_data_fixer
         PRIVATE
         thxsoft_database_postgres
 )
-
-add_custom_command(TARGET app_4_export_data_fixer POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${ThxSoftDLLs}"
-        $<TARGET_FILE_DIR:app_4_export_data_fixer>)
