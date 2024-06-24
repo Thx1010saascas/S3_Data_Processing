@@ -1,4 +1,5 @@
-add_executable(app_3_simbad_import_db
+set(TARGET_NAME app_3_simbad_import_db)
+add_executable(${TARGET_NAME}
         main.cpp
         ExportToSql.cpp
         ExportToSql.h
@@ -6,7 +7,7 @@ add_executable(app_3_simbad_import_db
         SimbadRowProcessor.h
         DbQuery.cpp
         DbQuery.h)
-set_target_properties(app_3_simbad_import_db PROPERTIES OUTPUT_NAME "3_SimbadImportData")
+set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "3_SimbadImportData")
 
 find_package(spdlog REQUIRED)
 find_package(unofficial-curlpp CONFIG REQUIRED)
@@ -18,7 +19,7 @@ include("${ThxSoftLibrary}/cmake/thxsoft_database/thxsoft_databaseTargets.cmake"
 include("${ThxSoftLibrary}/cmake/thxsoft_database_postgres/thxsoft_database_postgresTargets.cmake")
 include("${ThxSoftLibrary}/cmake/thxsoft_web/thxsoft_webTargets.cmake")
 
-target_link_libraries(app_3_simbad_import_db
+target_link_libraries(${TARGET_NAME}
         PRIVATE
         thxsoft_astronomy::thxsoft_astronomy
         thxsoft_common::thxsoft_common
@@ -30,7 +31,4 @@ target_link_libraries(app_3_simbad_import_db
         libpqxx::pqxx
 )
 
-#add_custom_command(TARGET app_3_simbad_import_db POST_BUILD
-#        COMMAND ${CMAKE_COMMAND} -E copy_directory
-#        "${ThxSoftDLLs}"
-#        $<TARGET_FILE_DIR:app_3_simbad_import_db>)
+install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${ThxSoftInstallers})
