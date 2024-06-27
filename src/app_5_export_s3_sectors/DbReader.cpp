@@ -26,7 +26,7 @@ namespace thxsoft::export_s3_sectors
             SPDLOG_ERROR("Error opening DbReader database.");
         }
 
-        _start = chrono::high_resolution_clock::now();
+        _start = chrono::steady_clock::now();
     }
 
     void DbReader::getStars(const bool getNonGaiaStars, const function<void(const CelestialObject *)>& func) const

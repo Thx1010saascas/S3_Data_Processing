@@ -21,7 +21,7 @@ int main(const int argc, const char *argv[])
 
         LoggingSetup::SetupDefaultLogging("Logs/4_ExportDataFixer.log");
 
-        const auto start = chrono::high_resolution_clock::now();
+        const auto start = chrono::steady_clock::now();
         const char* postgresCnxString = argv[1];
         ExportDataFixerDb db(postgresCnxString);
 

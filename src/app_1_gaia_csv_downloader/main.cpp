@@ -2,6 +2,8 @@
 #include <filesystem>
 #include <fstream>
 #include <ConcurrentJob.h>
+#define NOMINMAX 1
+#define byte win_byte_override
 #include <curl/curl.h>
 #include "gumbo.h"
 #include "LoggingSetup.h"
