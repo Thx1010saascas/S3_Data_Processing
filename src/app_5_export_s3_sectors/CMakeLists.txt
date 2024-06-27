@@ -32,4 +32,4 @@ target_link_libraries(${TARGET_NAME}
         libpqxx::pqxx
 )
 
-install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${ThxSoftInstallers})
+install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${AppInstallers})

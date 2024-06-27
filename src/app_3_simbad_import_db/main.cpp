@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include <fstream>
 
@@ -31,6 +32,13 @@ struct ThreadData
     chrono::time_point<chrono::steady_clock> startTime;
 };
 
+size_t write_data(const char *ptr, const size_t size, const size_t nmemb, void *userdata) {
+    auto *stream = static_cast<ostream*>(userdata);
+    const size_t count = size * nmemb;
+    stream->write(ptr, count);
+    return count;
+}
+
 int main(const int argc, const char *argv[])
 {
     try
@@ -47,11 +55,11 @@ int main(const int argc, const char *argv[])
         const auto *const postgresCnxString = argv[2];
         const auto minParallax = 1.0/(stoi(argv[3]) / 3.26156378) * 1000; // Parallax to ly
 
-        const auto startTime = chrono::high_resolution_clock::now();
+        const auto startTime = chrono::steady_clock::now();
 
         spdlog::info("Importing Simbad data.");
 
-        auto logTime = chrono::high_resolution_clock::now();
+        auto logTime = chrono::steady_clock::now();
         auto stop = false;
         const ExportToSql dbWriter(postgresCnxString);
         const DbQuery dbQuery(postgresCnxString);
@@ -64,25 +72,30 @@ int main(const int argc, const char *argv[])
 
         nextRecordIndex = nextRecordIndex < 0 ? 0 : nextRecordIndex;
 
-        curlpp::Easy request;
-        const auto result = make_shared<stringstream>();
-        auto *const handle = request.getCurlHandle().getHandle();
-        request.setOpt(cURLpp::Options::WriteStream(result.get()));
-        request.setOpt(cURLpp::Options::Timeout(300));
-        request.setOpt(cURLpp::Options::BufferSize(20 * 1024 * 1024));
+        curl_global_init(CURL_GLOBAL_ALL);
+
+        const auto curl = curl_easy_init();
+
+        const auto stringOutputStream = make_shared<stringstream>();
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, stringOutputStream.get());
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 300);
+        curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 20 * 1024 * 1024);
 
         while(!stop)
         {
-            result->str("");
-            result->clear();
+            stringOutputStream->str("");
+            stringOutputStream->clear();
 
-            request.setOpt(curlpp::options::Url(
-                ThxWeb::encodedUrl(handle,
-                    vformat(simbadUrl + getBaseQuery(), make_format_args(nextRecordIndex)))));
+            curl_easy_setopt(curl, CURLOPT_URL, ThxWeb::encodedUrl(curl,
+                    vformat(simbadUrl + getBaseQuery(), make_format_args(nextRecordIndex))).c_str());
 
-            request.perform();
+            if(const auto res = curl_easy_perform(curl); res != CURLE_OK)
+                throw runtime_error(format("Failed to download data: {0}", curl_easy_strerror(res)));
 
-            auto csvParser = CsvParser(result);
+            curl_easy_cleanup(curl);
+
+            auto csvParser = CsvParser(stringOutputStream);
 
             while(csvParser.readLine())
             {
@@ -94,11 +107,11 @@ int main(const int argc, const char *argv[])
 
                 nextRecordIndex = csvParser.getValueAsInt64(SimbadRowProcessor::IndexColumnName).value() + 1;
 
-                if(chrono::duration_cast<chrono::seconds>(chrono::high_resolution_clock::now() - logTime).count() >= 10)
+                if(chrono::duration_cast<chrono::seconds>(chrono::steady_clock::now() - logTime).count() >= 10)
                 {
                     spdlog::info("Processed {:L}, added {:L} in {}.", nextRecordIndex, recordsImportedCount, Thx::toDurationString(startTime));
 
-                    logTime = chrono::high_resolution_clock::now();
+                    logTime = chrono::steady_clock::now();
                 }
 
                 if(!SimbadRowProcessor::processRow(minParallax, csvParser))
@@ -116,6 +129,8 @@ int main(const int argc, const char *argv[])
         dbWriter.commit();
 
         spdlog::info("Finished {:L}, added {:L} records in {}.", nextRecordIndex, recordsImportedCount, Thx::toDurationString(startTime));
+
+        curl_global_cleanup();
 
         return 0;
     }

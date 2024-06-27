@@ -29,4 +29,4 @@ target_link_libraries(${TARGET_NAME}
         thxsoft_database_postgres
 )
 
-install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${ThxSoftInstallers})
+install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${AppInstallers})

@@ -29,7 +29,7 @@ int main(const int argc, const char *argv[])
 
         auto objectType = 0;
 
-        const auto start = chrono::high_resolution_clock::now();
+        const auto start = chrono::steady_clock::now();
 
         for(const auto& type : Thx::split(argv[4], ","))
         {

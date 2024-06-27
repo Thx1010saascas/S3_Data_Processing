@@ -1,3 +1,4 @@
+#include <atomic>
 #include <fstream>
 #include <iostream>
 #include <Compression.h>
@@ -15,8 +16,8 @@ void showSyntax();
 
 static bool _stop;
 static string _postgresCnxString;
-static volatile long long _recordsProcessedCount;
-static volatile long long _recordsAddedCount;
+static atomic<long long> _recordsProcessedCount;
+static atomic<long long>  _recordsAddedCount;
 static double _minParallax;
 
 struct ThreadData
@@ -53,7 +54,7 @@ int processCsv(const ThreadData* data)
         csvParser.appendColumn(GaiaRowProcessor::LuminosityColumnName);
         csvParser.appendColumn(GaiaRowProcessor::RadiusColumnName);
 
-        auto logTime = chrono::high_resolution_clock::now();
+        auto logTime = chrono::steady_clock::now();
 
         const ExportToSql dbWriter(_postgresCnxString);
 
@@ -65,18 +66,18 @@ int processCsv(const ThreadData* data)
                 _stop = true;
             }
 
-            _recordsProcessedCount++;
-            if(chrono::duration_cast<chrono::seconds>(chrono::high_resolution_clock::now() - logTime).count() >= 10)
+            _recordsProcessedCount += 1;
+            if(chrono::duration_cast<chrono::seconds>(chrono::steady_clock::now() - logTime).count() >= 10)
             {
-                spdlog::info("Processed {:L}, added {:L} in {}.", _recordsProcessedCount, _recordsAddedCount, Thx::toDurationString(data->startTime));
+                spdlog::info("Processed {:L}, added {:L} in {}.", _recordsProcessedCount.load(), _recordsAddedCount.load(), Thx::toDurationString(data->startTime));
 
-                logTime = chrono::high_resolution_clock::now();
+                logTime = chrono::steady_clock::now();
             }
 
             if(!GaiaRowProcessor::processRow(_minParallax, csvParser))
                 continue;
 
-            _recordsAddedCount++;
+            _recordsAddedCount += 1;
 
             dbWriter.append(csvParser);
         }
@@ -84,7 +85,7 @@ int processCsv(const ThreadData* data)
         dbWriter.commit();
 
         dataStream->close();
-        
+
         data->exportProgressManager.add(data->fileName);
         data->exportProgressManager.writeState();
 
@@ -130,7 +131,7 @@ int main(const int argc, const char *argv[])
         remove_all(decompressPath);
         create_directory(decompressPath);
 
-        const auto startTime = chrono::high_resolution_clock::now();
+        const auto startTime = chrono::steady_clock::now();
 
         ExportProgressManager exportProgressManager((filesystem::path(csvPath) / "ProcessingState.log").string());
 
@@ -174,7 +175,7 @@ int main(const int argc, const char *argv[])
 
         ConcurrentJob::waitForThreadsToFinish(&concurrentJobs);
 
-        spdlog::info("Processed {:L} records in {}.", _recordsProcessedCount, Thx::toDurationString(startTime));
+        spdlog::info("Processed {:L} records in {}.", _recordsProcessedCount.load(), Thx::toDurationString(startTime));
 
         return 0;
     }

@@ -1,7 +1,6 @@
 set(TARGET_NAME app_2_gaia_import_csv)
 add_executable(${TARGET_NAME}
         main.cpp
-        main.cpp
         ExportToSql.cpp
         ExportToSql.h
         GaiaRowProcessor.h
@@ -12,6 +11,7 @@ add_executable(${TARGET_NAME}
 set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "2_GaiaImportCsvs")
 
 find_package(spdlog REQUIRED)
+find_package(fmt REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 
@@ -28,7 +28,8 @@ target_link_libraries(${TARGET_NAME}
         thxsoft_astronomy::thxsoft_astronomy
         spdlog::spdlog_header_only
         libpqxx::pqxx
+        fmt::fmt-header-only
         ZLIB::ZLIB
 )
 
-install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${ThxSoftInstallers})
+install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${AppInstallers})

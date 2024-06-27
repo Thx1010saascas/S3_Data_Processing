@@ -5,8 +5,7 @@ add_executable(${TARGET_NAME}
 )
 set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "1_GaiaDownloadCsvs")
 
-find_package(spdlog REQUIRED)
-find_package(unofficial-curlpp CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 find_package(CURL CONFIG REQUIRED)
 find_package(unofficial-gumbo CONFIG REQUIRED)
 
@@ -18,7 +17,7 @@ target_link_libraries(${TARGET_NAME}
         thxsoft_common::thxsoft_common
         thxsoft_web::thxsoft_web
         spdlog::spdlog_header_only
-        unofficial::curlpp::curlpp
+        CURL::libcurl
         unofficial::gumbo::gumbo)
 
 #add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
@@ -26,10 +25,10 @@ target_link_libraries(${TARGET_NAME}
 #        COMMAND_EXPAND_LISTS
 #)
 
-install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${ThxSoftInstallers})
-#install(IMPORTED_RUNTIME_ARTIFACTS unofficial::curlpp::curlpp RUNTIME DESTINATION ${ThxSoftInstallers})
-#install(IMPORTED_RUNTIME_ARTIFACTS CURL::libcurl RUNTIME DESTINATION ${ThxSoftInstallers})
-#install(IMPORTED_RUNTIME_ARTIFACTS fmt::fmt RUNTIME DESTINATION ${ThxSoftInstallers})
+install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${AppInstallers})
+#install(IMPORTED_RUNTIME_ARTIFACTS unofficial::curlpp::curlpp RUNTIME DESTINATION ${AppInstallers})
+#install(IMPORTED_RUNTIME_ARTIFACTS CURL::libcurl RUNTIME DESTINATION ${AppInstallers})
+#install(IMPORTED_RUNTIME_ARTIFACTS fmt::fmt RUNTIME DESTINATION ${AppInstallers})
 
 #add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
 #        COMMAND ${CMAKE_COMMAND} -E copy_directory
