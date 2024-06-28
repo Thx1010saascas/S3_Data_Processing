@@ -1,4 +1,5 @@
 #pragma once
+#include <queue>
 #include <pqxx/pqxx>
 #include <SqliteBatchUpdate.h>
 #include "CelestialObject.h"
@@ -13,6 +14,8 @@ namespace thxsoft::export_s3_sectors
         explicit DbReader(const string&, int searchRangeLimitLy, int objectBitMask);
 
         void getStars(bool getNonGaiaStars, const function<void(const CelestialObject *)>&) const;
+        static void pushNameString(queue<string>& queue, const char* name);
+        static string popNameString(queue<string>& queue);
 
     private:
         static double GetSectorNumber(double v);
@@ -20,14 +23,15 @@ namespace thxsoft::export_s3_sectors
 
         const pqxx::zview _nonGaiaObjectsQuery =
             "SELECT simbad.index, "
-            "COALESCE(new_name1, name1), COALESCE(new_name2, name2), COALESCE(new_name3, name3), name4, parallax, teff, "
+            "name1, name2, name3, name4, name5, COALESCE(new_name6, name6), COALESCE(new_name7, name7), COALESCE(new_name8, name8), name9, name10, parallax, teff, "
             "new_spectral_type, fe_h, luminosity, radius, "
             "COALESCE(v, g_mag), x, y, z, g_source_id, CASE WHEN type like '%**%' THEN 1 ELSE 0 END, object_type "
             "FROM simbad LEFT OUTER JOIN export_overrides nf ON nf.index = simbad.index "
-            "WHERE id >= {} AND id < {} AND distance_ly <= {} AND g_source_id IS NULL AND object_type & {} > 0";
+            "WHERE id >= {} AND id < {} AND distance_ly <= {} AND object_type & {} > 0 AND "
+            "(g_source_id IS NULL OR (g_source_id IS NOT NULL AND (SELECT COUNT(*) FROM gaia WHERE source_id = g_source_id) = 0))";
         const pqxx::zview _gaiaObjectsQuery =
             "SELECT g.index, "
-            "COALESCE(new_name1, name1), COALESCE(new_name2, name2), COALESCE(new_name3, name3), name4, g.parallax, teff_gspphot, "
+            "name1, name2, name3, name4, name5, COALESCE(new_name6, name6), COALESCE(new_name7, name7), COALESCE(new_name8, name8), COALESCE(name9, 'Gaia DR3 ' || source_id), name10, g.parallax, teff_gspphot, "
             "new_spectral_type, COALESCE(mh_gspphot, fe_h), g.luminosity, g.radius, "
             "g.phot_bp_mean_mag, g.x, g.y, g.z, g.source_id, non_single_star >= 1, COALESCE(object_type, 1) "
             "FROM gaia AS g "

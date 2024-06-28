@@ -27,13 +27,12 @@ namespace thxsoft::export_data_fixer_db
             FixerRow fr;
 
             work->for_stream(_selectString, [&]
-                (const long long index, const char* name1, const char* name2, const char* name3, const char* name4) {
+                (const long long index, const char* name6, const char* name7, const char* name8) {
 
                 fr.index = index;
-                fr.name1 = name1 == nullptr ? "" : name1;
-                fr.name2 = name2 == nullptr ? "" : name2;
-                fr.name3 = name3 == nullptr ? "" : name3;
-                fr.name4 = name4 == nullptr ? "" : name4;
+                fr.name6 = name6 == nullptr ? "" : name6;
+                fr.name7 = name7 == nullptr ? "" : name7;
+                fr.name8 = name8 == nullptr ? "" : name8;
 
                 func(&fr);
             });
@@ -47,13 +46,13 @@ namespace thxsoft::export_data_fixer_db
         }
     }
 
-    void ExportDataFixerDb::append(const long long index, const string& name1, const string& name2, const string& name3) const
+    void ExportDataFixerDb::append(const long long index, const string& name6, const string& name7, const string& name8) const
     {
         _batchAdder->addRow(
             DatabaseUtils::asDbString(index),
-            DatabaseUtils::asDbString(name1),
-            DatabaseUtils::asDbString(name2),
-            DatabaseUtils::asDbString(name3));
+            DatabaseUtils::asDbString(name6),
+            DatabaseUtils::asDbString(name7),
+            DatabaseUtils::asDbString(name8));
     }
 
     void ExportDataFixerDb::commit() const

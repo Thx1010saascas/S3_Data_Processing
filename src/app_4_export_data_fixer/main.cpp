@@ -31,26 +31,27 @@ int main(const int argc, const char *argv[])
 
         db.startQuery([&] (const FixerRow* fr)
         {
-            const auto name1 = GreekLatinConverter::fixName(fr->name1);
-            const auto name2 = GreekLatinConverter::fixName(fr->name2);
-            const auto name3 = GreekLatinConverter::fixName(fr->name3);
+            // *, ** and V*
+            const auto name6 = GreekLatinConverter::fixName(fr->name6);
+            const auto name7 = GreekLatinConverter::fixName(fr->name7);
+            const auto name8 = GreekLatinConverter::fixName(fr->name8);
 
-            if(name1 != fr->name1 || name2 != fr->name2 || name3 != fr->name3)
+            if(name6 != fr->name6 || name7 != fr->name7 || name8 != fr->name8)
             {
                 fixCount++;
 
-                db.append(fr->index, name1, name2, name3);
+                db.append(fr->index, name6, name7, name8);
             }
 
             if(++totalCount % 10000 == 0)
             {
-                spdlog::info("Exported {:L} names and fixed {:L} entries in {}.", totalCount, fixCount, Thx::toDurationString(start));
+                spdlog::info("Processed {:L} candidates and fixed {:L} entries in {}.", totalCount, fixCount, Thx::toDurationString(start));
             }
         });
 
         db.commit();
 
-        spdlog::info("Exported {:L} names and fixed {:L} entries in {}.", totalCount, fixCount, Thx::toDurationString(start));
+        spdlog::info("Processed {:L} candidates and fixed {:L} entries in {}.", totalCount, fixCount, Thx::toDurationString(start));
     }
     catch (const exception &e)
     {

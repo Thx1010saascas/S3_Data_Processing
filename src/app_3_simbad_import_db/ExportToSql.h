@@ -18,5 +18,5 @@ private:
     shared_ptr<pqxx::connection> _dbWriteConnection;
 
     // Must be the same order as ExportToSql::append
-    const string _upsertString = R"(INSERT INTO simbad (index,type,name1,name2,name3,name4,g_source_id,ra,dec,glat,glon,parallax,teff,radius,luminosity,fe_h,b,v,g_mag,spectral_type,object_type) VALUES {} ON CONFLICT DO NOTHING;)";
+    const string _upsertString = R"(INSERT INTO simbad (index,type,name1,name2,name3,name4,name5,name6,name7,name8,name9,name10,g_source_id,ra,dec,glat,glon,parallax,teff,radius,luminosity,fe_h,b,v,g_mag,spectral_type,object_type) VALUES {} ON CONFLICT DO NOTHING;)";
 };

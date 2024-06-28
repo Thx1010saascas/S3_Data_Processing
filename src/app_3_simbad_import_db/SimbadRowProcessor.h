@@ -18,6 +18,12 @@ public:
     inline static const string Name2ColumnName = "name2";
     inline static const string Name3ColumnName = "name3";
     inline static const string Name4ColumnName = "name4";
+    inline static const string Name5ColumnName = "name5";
+    inline static const string Name6ColumnName = "name6";
+    inline static const string Name7ColumnName = "name7";
+    inline static const string Name8ColumnName = "name8";
+    inline static const string Name9ColumnName = "name9";
+    inline static const string Name10ColumnName = "name10";
     inline static const string SourceIdColumnName = "g_source_id";
     inline static const string RaColumnName = "ra";
     inline static const string DecColumnName = "dec";
@@ -37,10 +43,10 @@ public:
 private:
     static bool setTeffFromCalculation(const CsvParser& csvParser);
     static bool hasUpperAndLower(const string& string);
-    static void appendIfInCatalog(const vector<string>& cats, vector<string>& names, const string& catalogue);
+    static string getIfInCatalog(const vector<string>& cats, const string& catalogue);
     static void populateNames(const CsvParser& csvParser);
     static void populateObjectType(const CsvParser& csvParser);
-    static void populateLuminosityAndRadius(const CsvParser& csvParser);
+    static void populateLuminosityAndRadius(const CsvParser& csvParser, const optional<int>& teff);
     static void populateGalacticCoordinates(const CsvParser& csvParser);
 
     static string getCleanName(const string& value);

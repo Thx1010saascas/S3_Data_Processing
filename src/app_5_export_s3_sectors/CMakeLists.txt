@@ -8,7 +8,7 @@ add_executable(${TARGET_NAME}
         Sector.h
         CelestialObject.h
 )
-set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "5_ExportS3Database"    )
+set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "5_ExportS3Database")
 
 find_package(spdlog REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)

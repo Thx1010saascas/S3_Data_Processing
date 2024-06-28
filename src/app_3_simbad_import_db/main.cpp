@@ -87,15 +87,23 @@ int main(const int argc, const char *argv[])
             stringOutputStream->str("");
             stringOutputStream->clear();
 
-            curl_easy_setopt(curl, CURLOPT_URL, ThxWeb::encodedUrl(curl,
-                    vformat(simbadUrl + getBaseQuery(), make_format_args(nextRecordIndex))).c_str());
+            const auto url = ThxWeb::encodedUrl(curl, vformat(simbadUrl + getBaseQuery(), make_format_args(nextRecordIndex)));
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
             if(const auto res = curl_easy_perform(curl); res != CURLE_OK)
                 throw runtime_error(format("Failed to download data: {0}", curl_easy_strerror(res)));
 
-            curl_easy_cleanup(curl);
-
             auto csvParser = CsvParser(stringOutputStream);
+
+            csvParser.appendColumn(SimbadRowProcessor::Name2ColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::Name3ColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::Name4ColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::Name5ColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::Name6ColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::Name7ColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::Name8ColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::Name9ColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::Name10ColumnName);
 
             while(csvParser.readLine())
             {
@@ -130,6 +138,7 @@ int main(const int argc, const char *argv[])
 
         spdlog::info("Finished {:L}, added {:L} records in {}.", nextRecordIndex, recordsImportedCount, Thx::toDurationString(startTime));
 
+        curl_easy_cleanup(curl);
         curl_global_cleanup();
 
         return 0;
@@ -154,9 +163,6 @@ string getBaseQuery()
     "main_id,"
     "otypes as type,"
     "ids as name1,"
-    "'' as name2,"
-    "'' as name3,"
-    "'' as name4,"
     "0 as g_source_id,"
     "ra,"
     "dec,"

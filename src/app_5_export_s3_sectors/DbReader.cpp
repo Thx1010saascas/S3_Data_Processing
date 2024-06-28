@@ -1,4 +1,5 @@
 #include "DbReader.h"
+#include <queue>
 #include <spdlog/spdlog.h>
 #include <pqxx/pqxx>
 #include "Thx.h"
@@ -29,7 +30,7 @@ namespace thxsoft::export_s3_sectors
         _start = chrono::steady_clock::now();
     }
 
-    void DbReader::getStars(const bool getNonGaiaStars, const function<void(const CelestialObject *)>& func) const
+    void DbReader::getStars(const bool getNonGaiaStars, const function<void(const CelestialObject*)>& func) const
     {
         try
         {
@@ -47,22 +48,36 @@ namespace thxsoft::export_s3_sectors
 
                 const auto selectString = vformat(searchQuery, make_format_args(searchFromId, searchToId, _searchRangeLimitLy, _objectBitMask));
 
-                if(searchToId % 1000000 == 0)
+                if (searchToId % 1000000 == 0)
                 {
                     spdlog::info("Processed to index {:L} to {}.", searchToId, Thx::toDurationString(_start));
                 }
 
                 dbTransaction.for_stream(selectString, [&]
-                (const long long index, const char* name1, const char* name2, const char* name3, const char* name4, const double parallax, const optional<double> teff,
-                    const optional<string>& spectralType, const optional<double> metalicity, const optional<double> luminosity, const optional<double> radius,
-                    const optional<double> magVB, const double x, const double y, const double z, const optional<long long> sourceId,
-                    const bool isBinary, const optional<int> type){
+                     (const long long index, const char* name1, const char* name2, const char* name3, const char* name4, const char* name5,
+                      const char* name6, const char* name7, const char* name8, const char* name9, const char* name10,
+                      const double parallax, const optional<double> teff, const optional<string>& spectralType,
+                      const optional<double> metalicity, const optional<double> luminosity, const optional<double> radius,
+                      const optional<double> magVB, const double x, const double y, const double z, const optional<long long> sourceId,
+                      const bool isBinary, const optional<int> type) {
+                    auto nameQueue = queue<string>();
+
+                    pushNameString(nameQueue, name1);
+                    pushNameString(nameQueue, name2 != nullptr ? name2 : name3);
+                    pushNameString(nameQueue, name4 != nullptr ? name4 : name5);
+                    pushNameString(nameQueue, name6 != nullptr ? name6 : name7 != nullptr ? name7 : name8);
+                    pushNameString(nameQueue, name9 != nullptr ? name9 : name10);
+
+                    string exportName1 = popNameString(nameQueue);
+                    string exportName2 = popNameString(nameQueue);;
+                    string exportName3 = popNameString(nameQueue);;
+                    string exportName4 = popNameString(nameQueue);;
 
                     celestialObject.index = index;
-                    celestialObject.name1 = name1 == nullptr ? "" : name1;
-                    celestialObject.name2 = name2 == nullptr ? "" : name2;
-                    celestialObject.name3 = name3 == nullptr ? "" : name3;
-                    celestialObject.name4 = name4 == nullptr ? "" : name4;
+                    celestialObject.name1 = exportName1;
+                    celestialObject.name2 = exportName2;
+                    celestialObject.name3 = exportName3;
+                    celestialObject.name4 = exportName4;
                     celestialObject.parallax = parallax;
                     celestialObject.teff = teff;
                     celestialObject.spectralType = spectralType;
@@ -82,37 +97,58 @@ namespace thxsoft::export_s3_sectors
                     const auto sz = GetSectorNumber(celestialObject.z);
 
                     celestialObject.sectorId = std::format("X{}{}Y{}{}Z{}{}",
-                        sx >= 0 ? 'P' : 'N', abs(sx),
-                        sy >= 0 ? 'P' : 'N', abs(sy),
-                        sz >= 0 ? 'P' : 'N', abs(sz));
+                                                        sx >= 0 ? 'P' : 'N', abs(sx),
+                                                        sy >= 0 ? 'P' : 'N', abs(sy),
+                                                        sz >= 0 ? 'P' : 'N', abs(sz));
 
-                    if(celestialObject.spectralType.has_value() && celestialObject.teff)
-                    {
-                        double mag; // Puke, there has to be a better way.
-                        const double* absoluteMagnitude = nullptr;
-                        if(celestialObject.magnitudeVorB.has_value())
-                        {
-                            mag = astronomy::AstronomyConverter::toAbsoluteMagnitude(celestialObject.parsecs, celestialObject.magnitudeVorB.value());
+                     if (!celestialObject.spectralType.has_value() && celestialObject.teff)
+                     {
+                         double mag; // Puke, there has to be a better way.
+                         const double* absoluteMagnitude = nullptr;
+                         if (celestialObject.magnitudeVorB.has_value())
+                         {
+                             mag = astronomy::AstronomyConverter::toAbsoluteMagnitude(celestialObject.parsecs, celestialObject.magnitudeVorB.value());
 
-                            absoluteMagnitude = &mag;
-                        }
+                             absoluteMagnitude = &mag;
+                         }
 
-                        celestialObject.spectralType = spectralClassifier->getSpectralType(*celestialObject.teff, absoluteMagnitude);
-                    }
+                         celestialObject.spectralType = spectralClassifier->getSpectralType(*celestialObject.teff, absoluteMagnitude);
+                     }
 
-                    func(&celestialObject);
-               });
+                     func(&celestialObject);
+                 });
 
                 searchFromId = searchToId;
             }
 
             dbTransaction.commit();
         }
-        catch (const exception &e)
+        catch (const exception& e)
         {
             SPDLOG_ERROR("startQuery error", e.what());
             throw;
         }
+    }
+
+    void DbReader::pushNameString(queue<string>& queue, const char* name)
+    {
+        if(name != nullptr)
+        {
+            const string str = name;
+            queue.push(str);
+        }
+    }
+
+    string DbReader::popNameString(queue<string>& queue)
+    {
+        if(queue.empty())
+            return "";
+
+        const auto value = queue.front();
+
+        queue.pop();
+
+        return value;
     }
 
     long long DbReader::getMaxIdAsync(const string& tableName) const

@@ -13,19 +13,15 @@ using namespace thxsoft::astronomy;
 
 bool SimbadRowProcessor::processRow(const double minParallax, const CsvParser& csvParser)
 {
-    const auto parallax = csvParser.getValueAsDouble(ParallaxColumnName).value();
-
-    if(parallax < minParallax)
+    if(const double parallax = csvParser.getValueAsDouble(ParallaxColumnName).value();
+        parallax < minParallax)
         return false;
 
     if (csvParser.getValue(TeffColumnName).empty())
     {
         if(!setTeffFromCalculation(csvParser))
-            return false; // Can't calculate a temperature so exit.
+            return false;
     }
-
-    // Teff is now an integer.
-    csvParser.setValue(TeffColumnName, to_string(static_cast<int>(csvParser.getValueAsDouble(TeffColumnName).value())));
 
     // These have default values, make sure they are cleared.
     csvParser.setValue(ObjectTypeColumnName, "");
@@ -38,9 +34,16 @@ bool SimbadRowProcessor::processRow(const double minParallax, const CsvParser& c
 
     populateNames(csvParser);
     populateObjectType(csvParser);
-    populateLuminosityAndRadius(csvParser);
     populateGalacticCoordinates(csvParser);
 
+    // Teff is now an integer.
+    if(const auto teff = csvParser.getValueAsDouble(TeffColumnName);
+        teff.has_value())
+    {
+        const auto intTeff = static_cast<int>(teff.value());
+        csvParser.setValue(TeffColumnName, to_string(intTeff));
+        populateLuminosityAndRadius(csvParser, intTeff);
+    }
     return true;
 }
 
@@ -61,7 +64,7 @@ bool SimbadRowProcessor::hasUpperAndLower(const string& string)
     return false;
 }
 
-void SimbadRowProcessor::appendIfInCatalog(const vector<string>& cats, vector<string>& names, const string& catalogue)
+string SimbadRowProcessor::getIfInCatalog(const vector<string>& cats, const string& catalogue)
 {
     for(const auto& cat : cats)
     {
@@ -69,25 +72,23 @@ void SimbadRowProcessor::appendIfInCatalog(const vector<string>& cats, vector<st
         {
             const auto name = getCleanName(cat);
 
-            // No duplicates.
-            if(ranges::find(names, name) != names.end())
-                return;
-
-            names.push_back(name);
+            return name;
         }
     }
+
+    return "";
 }
 
 void SimbadRowProcessor::populateNames(const CsvParser& csvParser)
 {
     const auto cats = Thx::split(csvParser.getValue(Name1ColumnName), "|");
-    auto names = vector<string>();
+    string name1 = "";
 
     if(const auto mainId = csvParser.getValue(MainIdColumnName); mainId.starts_with("NAME "))
     {
         const auto cleanName = getCleanName(mainId);
         if(!cleanName.starts_with('['))
-            names.push_back(cleanName);
+            name1 = cleanName;
     }
 
     for(const auto& name : cats)
@@ -96,29 +97,36 @@ void SimbadRowProcessor::populateNames(const CsvParser& csvParser)
         {
             const auto cleanName = getCleanName(name);
 
-            if(!cleanName.starts_with('[') && ranges::find(names, cleanName) == names.end())
-                names.push_back(cleanName);
+            if(!cleanName.starts_with('['))
+            {
+                name1 = cleanName;
+                break;
+            }
         }
         else if(name.starts_with("Gaia DR3 "))
             csvParser.setValue(SourceIdColumnName, Thx::trim(name.substr(strlen("Gaia DR3 "))));
     }
 
-    // Puke, but we need precedence...
-    // A space at the end of the catalogue name is important.
-    appendIfInCatalog(cats, names, "* ");
-    appendIfInCatalog(cats, names, "** ");
-    appendIfInCatalog(cats, names, "V* ");
-    appendIfInCatalog(cats, names, "Wolf ");
-    appendIfInCatalog(cats, names, "Ross ");
-    appendIfInCatalog(cats, names, "HD ");
-    appendIfInCatalog(cats, names, "GJ ");
-    appendIfInCatalog(cats, names, "Gaia DR3 ");
-    appendIfInCatalog(cats, names, "2MASS ");
+    const auto name2 = getIfInCatalog(cats, "Wolf ");
+    const auto name3 = getIfInCatalog(cats, "Ross ");
+    const auto name4 = getIfInCatalog(cats, "HD ");
+    const auto name5 = getIfInCatalog(cats, "GJ ");
+    const auto name6 = getIfInCatalog(cats, "* ");
+    const auto name7 = getIfInCatalog(cats, "** ");
+    const auto name8 = getIfInCatalog(cats, "V* ");
+    const auto name9 = getIfInCatalog(cats, "Gaia DR3 ");
+    const auto name10 = getIfInCatalog(cats, "2MASS ");
 
-    csvParser.setValue(Name1ColumnName, names.empty() ? "" : Thx::deleteDuplicateSpaces(names[0]));
-    csvParser.setValue(Name2ColumnName, names.size() > 1 ? Thx::deleteDuplicateSpaces(names[1]) : "");
-    csvParser.setValue(Name3ColumnName, names.size() > 2 ? Thx::deleteDuplicateSpaces(names[2]) : "");
-    csvParser.setValue(Name4ColumnName, names.size() > 3 ? Thx::deleteDuplicateSpaces(names[3]) : "");
+    csvParser.setValue(Name1ColumnName, name1);
+    csvParser.setValue(Name2ColumnName, name2);
+    csvParser.setValue(Name3ColumnName, name3);
+    csvParser.setValue(Name4ColumnName, name4);
+    csvParser.setValue(Name5ColumnName, name5);
+    csvParser.setValue(Name6ColumnName, name6);
+    csvParser.setValue(Name7ColumnName, name7);
+    csvParser.setValue(Name8ColumnName, name8);
+    csvParser.setValue(Name9ColumnName, name9);
+    csvParser.setValue(Name10ColumnName, name10);
 }
 
 constexpr uint32_t SimbadRowProcessor::hash(const char *s, const int off) noexcept
@@ -166,23 +174,20 @@ void SimbadRowProcessor::populateObjectType(const CsvParser& csvParser)
     csvParser.setValue(ObjectTypeColumnName, to_string(objectType));
 }
 
-void SimbadRowProcessor::populateLuminosityAndRadius(const CsvParser& csvParser)
+void SimbadRowProcessor::populateLuminosityAndRadius(const CsvParser& csvParser, const optional<int>& teff)
 {
-    const auto teff = static_cast<int>(csvParser.getValueAsDouble(TeffColumnName).value());
-
-    if (LuminanceCalculator::teffIsInGBandCalculationRange(teff))
+    if (LuminanceCalculator::teffIsInGBandCalculationRange(teff.value()))
     {
         const auto mag = csvParser.getValueAsDouble(VMagColumnName);
         if (mag.has_value())
         {
             const auto parsecs = AstronomyConverter::toParsecsMas(csvParser.getValueAsDouble(ParallaxColumnName).value());
-            const auto luminosityLSol = LuminanceCalculator::calculateGBand(mag.value(), parsecs, teff);
 
-            if (isfinite(luminosityLSol))
+            if (const auto luminosityLSol = LuminanceCalculator::calculateGBand(mag.value(), parsecs, teff.value());
+                isfinite(luminosityLSol))
             {
-                const auto radius = RadiusCalculator::calculateWithLSol(luminosityLSol, teff);
-
-                if (isfinite(radius))
+                if (const auto radius = RadiusCalculator::calculateWithLSol(luminosityLSol, teff.value());
+                    isfinite(radius))
                 {
                     csvParser.setValue("luminosity", format("{:.3f}", luminosityLSol));
                     csvParser.setValue("radius", format("{:.3f}", AstronomyConverter::toRSol(radius)));
@@ -194,22 +199,15 @@ void SimbadRowProcessor::populateLuminosityAndRadius(const CsvParser& csvParser)
 
 bool SimbadRowProcessor::setTeffFromCalculation(const CsvParser& csvParser)
 {
-    auto teff = csvParser.getValueAsDouble("teff");
-
-    if(teff.has_value())
-        return true;
-
     const auto bMag = csvParser.getValueAsDouble(BMagColumnName);
     const auto vMag = csvParser.getValueAsDouble(VMagColumnName);
-
-    teff = TeffCalculator::calculate(bMag, vMag);
+    const auto teff = TeffCalculator::calculate(bMag, vMag);
 
     if (!teff.has_value())
     {
-        const auto objectType = csvParser.getValueAsInteger(ObjectTypeColumnName).value();
-
         // All stars require a temperature.
-        if((objectType & static_cast<int>(Star)) == 0)
+        if(const auto objectType = csvParser.getValueAsInteger(ObjectTypeColumnName).value();
+            (objectType & static_cast<int>(Star)) > 0)
             return false;
     }
 
@@ -243,7 +241,7 @@ string SimbadRowProcessor::getCleanName(const string& value)
     else
         name = value;
 
-    name = Thx::trim(name);
+    name = Thx::trim(Thx::deleteDuplicateSpaces(name));
 
     return name;
 }

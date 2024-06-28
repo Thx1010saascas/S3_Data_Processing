@@ -25,6 +25,12 @@ create table public.simbad
     name2         text,
     name3         text,
     name4         text,
+    name5         text,
+    name6         text,
+    name7         text,
+    name8         text,
+    name9         text,
+    name10         text,
     spectral_type text,
     geom          geometry,
     g_mag         double precision,
@@ -100,9 +106,9 @@ create table public.export_overrides
     index             bigint not null
         constraint namefixes_pk
             primary key,
-    new_name1         text,
-    new_name2         text,
-    new_name3         text,
+    new_name6         text,
+    new_name7         text,
+    new_name8         text,
     new_spectral_type text
 );
 
