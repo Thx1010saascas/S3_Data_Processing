@@ -16,7 +16,7 @@ set(VCPKG_ROOT "C:/Users/steve/.vcpkg-clion/vcpkg") # VCPKG install root.
 
 if (DEFINED USING_MINGW)
     set(VCPKG_TRIPLET x64-mingw-static)
-    add_link_options(-static-libgcc -static-libstdc++)
+    add_link_options(-static-libgcc -static-libstdc++ --static)
 else()
     set(VCPKG_TRIPLET x64-windows-static)
     # Needed if we are using a x64-windows-static VCPKG triplet.

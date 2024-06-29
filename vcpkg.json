@@ -1,0 +1,36 @@
+{
+  "name" : "s3-data-processing",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "afa12e7292fb47771e619675d7915645fe0adb1b",
+  "dependencies" : [ {
+    "name" : "curl",
+    "version>=" : "8.8.0#3"
+  }, {
+    "name" : "fmt",
+    "version>=" : "10.2.1#2"
+  }, {
+    "name" : "gumbo",
+    "version>=" : "0.10.1#6"
+  }, {
+    "name" : "libpq",
+    "version>=" : "16.2#1"
+  }, {
+    "name" : "libpqxx",
+    "version>=" : "7.9.0"
+  }, {
+    "name" : "lz4",
+    "version>=" : "1.9.4#1"
+  }, {
+    "name" : "openssl",
+    "version>=" : "3.3.1#1"
+  }, {
+    "name" : "spdlog",
+    "version>=" : "1.14.1"
+  }, {
+    "name" : "sqlite3",
+    "version>=" : "3.46.0#1"
+  }, {
+    "name" : "zlib",
+    "version>=" : "1.3.1"
+  } ]
+}
