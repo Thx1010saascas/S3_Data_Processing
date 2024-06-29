@@ -21,16 +21,21 @@ create table public.simbad
     luminosity    double precision,
     radius        double precision,
     type          text,
-    name1         text,
-    name2         text,
-    name3         text,
-    name4         text,
-    name5         text,
-    name6         text,
-    name7         text,
-    name8         text,
-    name9         text,
-    name10         text,
+    name          text,
+    name_wolf     text,
+    name_ross     text,
+    name_s        text,
+    name_ss       text,
+    name_vs       text,
+    name_hip      text,
+    name_hd       text,
+    name_gj       text,
+    name_wise     text,
+    name_2mass    text,
+    name_gaia     text,
+    name13        text,
+    name14        text,
+    name15        text,
     spectral_type text,
     geom          geometry,
     g_mag         double precision,
@@ -48,8 +53,8 @@ create index "simbad_lower(name)_index"
 create index simbad_distance_ly_index
     on public.simbad (distance_ly);
 
-create index simbad_name1_index
-    on public.simbad (name1);
+create index simbad_name_index
+    on public.simbad (name);
 
 create index simbad_g_source_id_index
     on public.simbad (g_source_id);
@@ -101,14 +106,16 @@ create trigger b_gcoord_update
     when (new.glat IS NOT NULL AND new.glon IS NOT NULL AND new.distance_ly IS NOT NULL)
 execute procedure public.trg_cartesian_update();
 
+
 create table public.export_overrides
 (
     index             bigint not null
         constraint namefixes_pk
             primary key,
-    new_name6         text,
-    new_name7         text,
-    new_name8         text,
+    new_name        text,
+    new_name_s        text,
+    new_name_ss       text,
+    new_name_vs       text,
     new_spectral_type text
 );
 

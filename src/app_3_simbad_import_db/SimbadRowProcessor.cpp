@@ -81,52 +81,60 @@ string SimbadRowProcessor::getIfInCatalog(const vector<string>& cats, const stri
 
 void SimbadRowProcessor::populateNames(const CsvParser& csvParser)
 {
-    const auto cats = Thx::split(csvParser.getValue(Name1ColumnName), "|");
-    string name1 = "";
+    const auto cats = Thx::split(csvParser.getValue(NameColumnName), "|");
+    string name = "";
 
     if(const auto mainId = csvParser.getValue(MainIdColumnName); mainId.starts_with("NAME "))
     {
         const auto cleanName = getCleanName(mainId);
         if(!cleanName.starts_with('['))
-            name1 = cleanName;
+            name = cleanName;
     }
 
-    for(const auto& name : cats)
+    for(const auto& cat : cats)
     {
-        if(name.starts_with("NAME "))
+        if(cat.starts_with("NAME "))
         {
-            const auto cleanName = getCleanName(name);
+            const auto cleanName = getCleanName(cat);
 
             if(!cleanName.starts_with('['))
             {
-                name1 = cleanName;
+                name = cleanName;
                 break;
             }
         }
-        else if(name.starts_with("Gaia DR3 "))
-            csvParser.setValue(SourceIdColumnName, Thx::trim(name.substr(strlen("Gaia DR3 "))));
+        else if(cat.starts_with("Gaia DR3 "))
+            csvParser.setValue(SourceIdColumnName, Thx::trim(cat.substr(strlen("Gaia DR3 "))));
     }
 
-    const auto name2 = getIfInCatalog(cats, "Wolf ");
-    const auto name3 = getIfInCatalog(cats, "Ross ");
-    const auto name4 = getIfInCatalog(cats, "HD ");
-    const auto name5 = getIfInCatalog(cats, "GJ ");
-    const auto name6 = getIfInCatalog(cats, "* ");
-    const auto name7 = getIfInCatalog(cats, "** ");
-    const auto name8 = getIfInCatalog(cats, "V* ");
-    const auto name9 = getIfInCatalog(cats, "Gaia DR3 ");
-    const auto name10 = getIfInCatalog(cats, "2MASS ");
+    const auto nameWolf = getIfInCatalog(cats, "Wolf ");
+    const auto nameRoss = getIfInCatalog(cats, "Ross ");
+    const auto nameS = getIfInCatalog(cats, "* ");
+    const auto nameSS = getIfInCatalog(cats, "** ");
+    const auto nameVS = getIfInCatalog(cats, "V* ");
+    const auto nameHip = getIfInCatalog(cats, "HIP ");
+    const auto nameHd = getIfInCatalog(cats, "HD ");
+    const auto nameGj = getIfInCatalog(cats, "GJ ");
+    const auto nameWise = getIfInCatalog(cats, "WISE ");
+    const auto name2Mass = getIfInCatalog(cats, "2MASS ");
+    const auto nameGaia = getIfInCatalog(cats, "Gaia DR3 ");
+    const auto nameTyc = getIfInCatalog(cats, "TYC ");
+    const auto nameNgc = getIfInCatalog(cats, "NGC ");
 
-    csvParser.setValue(Name1ColumnName, name1);
-    csvParser.setValue(Name2ColumnName, name2);
-    csvParser.setValue(Name3ColumnName, name3);
-    csvParser.setValue(Name4ColumnName, name4);
-    csvParser.setValue(Name5ColumnName, name5);
-    csvParser.setValue(Name6ColumnName, name6);
-    csvParser.setValue(Name7ColumnName, name7);
-    csvParser.setValue(Name8ColumnName, name8);
-    csvParser.setValue(Name9ColumnName, name9);
-    csvParser.setValue(Name10ColumnName, name10);
+    csvParser.setValue(NameColumnName, name);
+    csvParser.setValue(NameWolfColumnName, nameWolf);
+    csvParser.setValue(NameRossColumnName, nameRoss);
+    csvParser.setValue(NameSColumnName, nameS);
+    csvParser.setValue(NameSSColumnName, nameSS);
+    csvParser.setValue(NameVSColumnName, nameVS);
+    csvParser.setValue(NameHipColumnName, nameHip);
+    csvParser.setValue(NameHdColumnName, nameHd);
+    csvParser.setValue(NameGjColumnName, nameGj);
+    csvParser.setValue(NameWiseColumnName, nameWise);
+    csvParser.setValue(Name2MassColumnName, name2Mass);
+    csvParser.setValue(NameGaiaColumnName, nameGaia);
+    csvParser.setValue(NameTycColumnName, nameTyc);
+    csvParser.setValue(NameNgcColumnName, nameNgc);
 }
 
 constexpr uint32_t SimbadRowProcessor::hash(const char *s, const int off) noexcept

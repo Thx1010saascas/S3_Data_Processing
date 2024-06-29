@@ -95,15 +95,19 @@ int main(const int argc, const char *argv[])
 
             auto csvParser = CsvParser(stringOutputStream);
 
-            csvParser.appendColumn(SimbadRowProcessor::Name2ColumnName);
-            csvParser.appendColumn(SimbadRowProcessor::Name3ColumnName);
-            csvParser.appendColumn(SimbadRowProcessor::Name4ColumnName);
-            csvParser.appendColumn(SimbadRowProcessor::Name5ColumnName);
-            csvParser.appendColumn(SimbadRowProcessor::Name6ColumnName);
-            csvParser.appendColumn(SimbadRowProcessor::Name7ColumnName);
-            csvParser.appendColumn(SimbadRowProcessor::Name8ColumnName);
-            csvParser.appendColumn(SimbadRowProcessor::Name9ColumnName);
-            csvParser.appendColumn(SimbadRowProcessor::Name10ColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameWolfColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameRossColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameSColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameSSColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameVSColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameHipColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameHdColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameGjColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameWiseColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::Name2MassColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameGaiaColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameTycColumnName);
+            csvParser.appendColumn(SimbadRowProcessor::NameNgcColumnName);
 
             while(csvParser.readLine())
             {
@@ -162,7 +166,7 @@ string getBaseQuery()
     "oid as index,"
     "main_id,"
     "otypes as type,"
-    "ids as name1,"
+    "ids as name,"
     "0 as g_source_id,"
     "ra,"
     "dec,"

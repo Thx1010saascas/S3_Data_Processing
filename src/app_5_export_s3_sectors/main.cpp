@@ -10,10 +10,30 @@ using namespace thxsoft::export_s3_sectors;
 
 void showSyntax();
 
+double myRound(double x)
+{
+    return floor( x + 0.5 );
+    return x/(abs(x)) * (abs(x)+0.5);
+}
+
 int main(const int argc, const char *argv[])
 {
     try
     {
+        auto aaa11 = static_cast<int>(roundf(1.4));
+        auto aaa21 = static_cast<int>(roundf(-1.4));
+        auto aaa1 = static_cast<int>(roundf(1.5));
+        auto aaa2 = static_cast<int>(roundf(-1.5));
+        auto aaa12 = static_cast<int>(roundf(1.6));
+        auto aaa23 = static_cast<int>(roundf(-1.6));
+
+        auto wwaaa11 = static_cast<int>(myRound(1.4));
+        auto waaa21 = static_cast<int>(myRound(-1.4));
+        auto waaa1 = static_cast<int>(myRound(1.5));
+        auto waaa2 = static_cast<int>(myRound(-1.5));
+        auto waaa12 = static_cast<int>(myRound(1.6));
+        auto waaa23 = static_cast<int>(myRound(-1.6));
+
         if(argc < 5 || argc > 6)
         {
             showSyntax();

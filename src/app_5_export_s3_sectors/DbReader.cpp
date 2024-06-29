@@ -1,4 +1,6 @@
 #include "DbReader.h"
+
+#include <iostream>
 #include <queue>
 #include <spdlog/spdlog.h>
 #include <pqxx/pqxx>
@@ -54,19 +56,36 @@ namespace thxsoft::export_s3_sectors
                 }
 
                 dbTransaction.for_stream(selectString, [&]
-                     (const long long index, const char* name1, const char* name2, const char* name3, const char* name4, const char* name5,
-                      const char* name6, const char* name7, const char* name8, const char* name9, const char* name10,
-                      const double parallax, const optional<double> teff, const optional<string>& spectralType,
-                      const optional<double> metalicity, const optional<double> luminosity, const optional<double> radius,
-                      const optional<double> magVB, const double x, const double y, const double z, const optional<long long> sourceId,
-                      const bool isBinary, const optional<int> type) {
+                     (const long long index,const char* name,const char* name_wolf,const char* name_ross,
+                         const char* name_s,const char* name_ss,const char* name_vs,const char* name_hip,
+                         const char* name_hd,const char* name_gj,const char* name_wise,
+                         const char* name_2mass, const char* name_gaia,const char* name_tyc, const char* name_ngc,
+                         const double parallax, const optional<double> teff, const optional<string>& spectralType,
+                         const optional<double> metalicity, const optional<double> luminosity, const optional<double> radius,
+                         const optional<double> magVB, const double x, const double y, const double z,
+                         const optional<long long> sourceId,const bool isBinary, const optional<int> type) {
                     auto nameQueue = queue<string>();
 
-                    pushNameString(nameQueue, name1);
-                    pushNameString(nameQueue, name2 != nullptr ? name2 : name3);
-                    pushNameString(nameQueue, name4 != nullptr ? name4 : name5);
-                    pushNameString(nameQueue, name6 != nullptr ? name6 : name7 != nullptr ? name7 : name8);
-                    pushNameString(nameQueue, name9 != nullptr ? name9 : name10);
+                    if(!teff.has_value())
+                    {
+                        //Stars have to have a Teff.
+                        if(!type.has_value() || type.value() & static_cast<int>(Star) > 0)
+                            return;
+                    }
+
+                    pushNameString(nameQueue, name);
+                    pushNameString(nameQueue, name_wolf != nullptr ? name_wolf : name_ross);
+                    pushNameString(nameQueue, name_s != nullptr ? name_s : name_vs);
+
+                    if(name_hip != nullptr)
+                        pushNameString(nameQueue, name_hip);
+
+                    pushNameString(nameQueue, name_hd != nullptr ? name_hd : name_gj != nullptr ? name_gj : name_wise);
+                    pushNameString(nameQueue, name_2mass != nullptr ? name_2mass : name_gaia);
+                    pushNameString(nameQueue, name_tyc != nullptr ? name_tyc : name_ngc);
+
+                    if(name_ss != nullptr)
+                        pushNameString(nameQueue, name_ss);
 
                     string exportName1 = popNameString(nameQueue);
                     string exportName2 = popNameString(nameQueue);;
@@ -162,12 +181,17 @@ namespace thxsoft::export_s3_sectors
         return result[0].as<long long>();
     }
 
+    double DbReader::myRound(double x)
+    {
+        return floor( x + 0.5 );
+    }
+
     double DbReader::GetSectorNumber(const double v)
     {
         auto number = v;
 
         if (abs(number) > 100)
-            number = round(number / Sector::SectorLengthLy);
+            number = myRound(number / Sector::SectorLengthLy);
         else
         {
             number /= Sector::HalfSectorLengthLy;

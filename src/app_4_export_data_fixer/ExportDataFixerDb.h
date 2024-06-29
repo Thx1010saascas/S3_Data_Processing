@@ -10,9 +10,9 @@ namespace thxsoft::export_data_fixer_db
     struct FixerRow
     {
         long long index;
-        string name6;
-        string name7;
-        string name8;
+        string name_s;
+        string name_ss;
+        string name_vs;
         string spectralType;
     };
 
@@ -21,13 +21,13 @@ namespace thxsoft::export_data_fixer_db
         explicit ExportDataFixerDb(const string&);
 
         void startQuery(const function<void(const FixerRow *)>&);
-        void append(long long index, const string& name6, const string& name7, const string& name8) const;
+        void append(long long index, const string& name_s, const string& name_ss, const string& name_vs) const;
         void commit() const;
 
     private:
         shared_ptr<pqxx::connection> _dbReadConnection;
         shared_ptr<PostgresBatchUpdate> _batchAdder;
-        const pqxx::zview _selectString = "SELECT index, name6, name7, name8 FROM simbad WHERE name6 IS NOT NULL OR name7 IS NOT NULL OR name8 IS NOT NULL";
-        const string _upsertString = "INSERT INTO export_overrides (index, new_name6, new_name7, new_name8) VALUES {} ON CONFLICT (index) DO UPDATE SET new_name6=EXCLUDED.new_name6, new_name7=EXCLUDED.new_name7, new_name8=EXCLUDED.new_name8;";
+        const pqxx::zview _selectString = "SELECT index, name_s, name_ss, name_vs FROM simbad WHERE name_s IS NOT NULL OR name_ss IS NOT NULL OR name_vs IS NOT NULL";
+        const string _upsertString = "INSERT INTO export_overrides (index, new_name_s, new_name_ss, new_name_vs) VALUES {} ON CONFLICT (index) DO UPDATE SET new_name_s=EXCLUDED.new_name_s, new_name_ss=EXCLUDED.new_name_ss, new_name_vs=EXCLUDED.new_name_vs;";
     };
 }

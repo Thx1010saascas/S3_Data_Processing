@@ -31,16 +31,15 @@ int main(const int argc, const char *argv[])
 
         db.startQuery([&] (const FixerRow* fr)
         {
-            // *, ** and V*
-            const auto name6 = GreekLatinConverter::fixName(fr->name6);
-            const auto name7 = GreekLatinConverter::fixName(fr->name7);
-            const auto name8 = GreekLatinConverter::fixName(fr->name8);
+            const auto name_s = GreekLatinConverter::fixName(fr->name_s);
+            const auto name_ss = GreekLatinConverter::fixName(fr->name_ss);
+            const auto name_vs = GreekLatinConverter::fixName(fr->name_vs);
 
-            if(name6 != fr->name6 || name7 != fr->name7 || name8 != fr->name8)
+            if(name_s != fr->name_s || name_ss != fr->name_ss || name_vs != fr->name_vs)
             {
                 fixCount++;
 
-                db.append(fr->index, name6, name7, name8);
+                db.append(fr->index, name_s, name_ss, name_vs);
             }
 
             if(++totalCount % 10000 == 0)
