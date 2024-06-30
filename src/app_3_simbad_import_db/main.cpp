@@ -41,6 +41,12 @@ size_t write_data(const char *ptr, const size_t size, const size_t nmemb, void *
 
 int main(const int argc, const char *argv[])
 {
+#ifdef  __MINGW32__
+    Thx::setCustomLocale();
+#else
+    locale::global(locale("en-AU"));
+#endif
+
     try
     {
         if(argc != 4)

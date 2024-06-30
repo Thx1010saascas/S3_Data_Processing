@@ -94,6 +94,12 @@ int downloadCsv(const ThreadData* data)
 
 int main(const int argc, const char *argv[])
 {
+#ifdef  __MINGW32__
+    Thx::setCustomLocale();
+#else
+    locale::global(locale("en-AU"));
+#endif
+
     try
     {
         if(argc < 3 || argc > 4)

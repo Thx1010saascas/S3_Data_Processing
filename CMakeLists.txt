@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_LINKER_TYPE "LLD")
 
 #################################
 # Start Root Config Settings
@@ -46,5 +47,7 @@ include(${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 include_directories(${VCPKG_ROOT}/installed/${VCPKG_TRIPLET}/include)
 
 project(S3_Data_Processing)
+
+set(RuntimeDependencies "${PROJECT_SOURCE_DIR}/RuntimeDependencies")
 
 add_subdirectory(src)

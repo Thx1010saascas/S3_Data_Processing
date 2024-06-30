@@ -9,6 +9,12 @@ using namespace thxsoft::export_data_fixer_db;
 
 int main(const int argc, const char *argv[])
 {
+#ifdef  __MINGW32__
+    Thx::setCustomLocale();
+#else
+    locale::global(locale("en-AU"));
+#endif
+
     try
     {
         if(argc != 2)

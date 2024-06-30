@@ -30,3 +30,13 @@ target_link_libraries(${TARGET_NAME}
 )
 
 install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${AppInstallers})
+install(FILES ${RuntimeDependencies}/libcrypto-3-x64.dll DESTINATION ${AppInstallers})
+install(FILES ${RuntimeDependencies}/libssl-3-x64.dll DESTINATION ${AppInstallers})
+install(FILES ${RuntimeDependencies}/libiconv-2.dll DESTINATION ${AppInstallers})
+install(FILES ${RuntimeDependencies}/libintl-9.dll DESTINATION ${AppInstallers})
+install(FILES ${RuntimeDependencies}/libpq.dll DESTINATION ${AppInstallers})
+
+add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${RuntimeDependencies}
+        $<TARGET_FILE_DIR:${TARGET_NAME}>)
