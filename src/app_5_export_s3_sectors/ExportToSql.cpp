@@ -48,9 +48,9 @@ namespace thxsoft::export_s3_sectors
             DatabaseUtils::asDbString(celestialObject->teff.has_value() ? std::to_string(static_cast<int>(round(celestialObject->teff.value()))) : ""),
             DatabaseUtils::asDbString(celestialObject->spectralType.has_value() ? celestialObject->spectralType.value() : ""),
             DatabaseUtils::asDbString(celestialObject->isBinary),
-            DatabaseUtils::asDbString(static_cast<int>(DbReader::myRound(celestialObject->x))),
-            DatabaseUtils::asDbString(static_cast<int>(DbReader::myRound(celestialObject->y))),
-            DatabaseUtils::asDbString(static_cast<int>(DbReader::myRound(celestialObject->z)))
+            DatabaseUtils::asDbString(static_cast<int>(round(celestialObject->x))),
+            DatabaseUtils::asDbString(static_cast<int>(round(celestialObject->y))),
+            DatabaseUtils::asDbString(static_cast<int>(round(celestialObject->z)))
             );
     }
 

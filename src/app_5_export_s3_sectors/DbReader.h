@@ -16,7 +16,6 @@ namespace thxsoft::export_s3_sectors
         void getStars(bool getNonGaiaStars, const function<void(const CelestialObject *)>&) const;
         static void pushNameString(queue<string>& queue, const char* name);
         static string popNameString(queue<string>& queue);
-        static double myRound(double x);
 
     private:
         static double GetSectorNumber(double v);

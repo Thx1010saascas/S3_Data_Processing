@@ -73,6 +73,12 @@ namespace thxsoft::export_s3_sectors
                             return;
                     }
 
+                    if(name != nullptr && strstr(name, "**") != nullptr)
+                    {
+                        name_ss = name;
+                        name = nullptr;
+                    }
+
                     pushNameString(nameQueue, name);
                     pushNameString(nameQueue, name_wolf != nullptr ? name_wolf : name_ross);
                     pushNameString(nameQueue, name_s != nullptr ? name_s : name_vs);
@@ -181,17 +187,12 @@ namespace thxsoft::export_s3_sectors
         return result[0].as<long long>();
     }
 
-    double DbReader::myRound(double x)
-    {
-        return floor( x + 0.5 );
-    }
-
     double DbReader::GetSectorNumber(const double v)
     {
         auto number = v;
 
         if (abs(number) > 100)
-            number = myRound(number / Sector::SectorLengthLy);
+            number = round(number / Sector::SectorLengthLy);
         else
         {
             number /= Sector::HalfSectorLengthLy;
