@@ -3,12 +3,12 @@
 
 namespace thxsoft::export_data_fixer_db
 {
-    string GreekLatinConverter::fixName(const string& old_name)
+    std::string GreekLatinConverter::fixName(const std::string& old_name)
     {
         if (old_name.empty())
             return old_name;
 
-        auto new_name = string();
+        auto new_name = std::string();
         const auto words = Thx::split(old_name);
 
         for(auto word : words)
@@ -19,7 +19,7 @@ namespace thxsoft::export_data_fixer_db
             if(new_name.length() > 0)
                 new_name.append(" ");
 
-            if (auto number_index = word.find("0"); number_index != string::npos)
+            if (auto number_index = word.find("0"); number_index != std::string::npos)
             {
                 auto subWord = word.substr(0, number_index);
 

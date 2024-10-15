@@ -10,7 +10,9 @@ find_package(CURL CONFIG REQUIRED)
 find_package(unofficial-gumbo CONFIG REQUIRED)
 
 include("${ThxSoftLibrary}/cmake/thxsoft_common/thxsoft_commonTargets.cmake")
+include_directories("${ThxSoftIncludes}/thxsoft_common")
 include("${ThxSoftLibrary}/cmake/thxsoft_web/thxsoft_webTargets.cmake")
+include_directories("${ThxSoftIncludes}/thxsoft_web")
 
 target_link_libraries(${TARGET_NAME}
         PRIVATE

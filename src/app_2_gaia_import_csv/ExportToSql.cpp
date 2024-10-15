@@ -8,7 +8,7 @@
 using namespace pqxx;
 using namespace thxsoft::database;
 
-ExportToSql::ExportToSql(const string& connectionString)
+ExportToSql::ExportToSql(const std::string& connectionString)
 {
     _batchAdder = make_shared<PostgresBatchUpdate>(connectionString, _upsertString);
 }

@@ -2,11 +2,10 @@
 #include <string>
 #include <pqxx/pqxx>
 
-using namespace std;
 
 class DbQuery {
 public:
-    explicit DbQuery(const string& connectionString);
+    explicit DbQuery(const std::string& connectionString);
     ~DbQuery();
 
     long long getRecordCountAsync() const;

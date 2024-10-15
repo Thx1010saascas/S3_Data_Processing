@@ -13,12 +13,12 @@ using namespace pqxx;
 
 namespace thxsoft::export_s3_sectors
 {
-    DbReader::DbReader(const string& connectionString, const int searchRangeLimitLy, const int objectBitMask)
+    DbReader::DbReader(const std::string& connectionString, const int searchRangeLimitLy, const int objectBitMask)
         : _searchRangeLimitLy(searchRangeLimitLy), _objectBitMask(objectBitMask)
     {
         _dbReadConnection = make_shared<connection>(connectionString);
 
-        spectralClassifier = make_shared<astronomy::SpectralClassifier>();
+        spectralClassifier = std::make_shared<astronomy::SpectralClassifier>();
 
         if (_dbReadConnection->is_open())
         {
@@ -29,10 +29,10 @@ namespace thxsoft::export_s3_sectors
             SPDLOG_ERROR("Error opening DbReader database.");
         }
 
-        _start = chrono::steady_clock::now();
+        _start = std::chrono::steady_clock::now();
     }
 
-    void DbReader::getStars(const bool getNonGaiaStars, const function<void(const CelestialObject*)>& func) const
+    void DbReader::getStars(const bool getNonGaiaStars, const std::function<void(const CelestialObject*)>& func) const
     {
         try
         {
@@ -48,7 +48,7 @@ namespace thxsoft::export_s3_sectors
             {
                 auto searchToId = searchFromId + QueryPageSize;
 
-                const auto selectString = vformat(searchQuery, make_format_args(searchFromId, searchToId, _searchRangeLimitLy, _objectBitMask));
+                const auto selectString = fmt::format(fmt::runtime(searchQuery), searchFromId, searchToId, _searchRangeLimitLy, _objectBitMask);
 
                 if (searchToId % 1000000 == 0)
                 {
@@ -56,15 +56,18 @@ namespace thxsoft::export_s3_sectors
                 }
 
                 dbTransaction.for_stream(selectString, [&]
-                     (const long long index,const char* name,const char* name_wolf,const char* name_ross,
-                         const char* name_s,const char* name_ss,const char* name_vs,const char* name_hip,
-                         const char* name_hd,const char* name_gj,const char* name_wise,
-                         const char* name_2mass, const char* name_gaia,const char* name_tyc, const char* name_ngc,
-                         const double parallax, const optional<double> teff, const optional<string>& spectralType,
-                         const optional<double> metalicity, const optional<double> luminosity, const optional<double> radius,
-                         const optional<double> magVB, const double x, const double y, const double z,
-                         const optional<long long> sourceId,const bool isBinary, const optional<int> type) {
-                    auto nameQueue = queue<string>();
+                     (const long long index,const std::optional<std::string> name,const std::optional<std::string> name_wolf,
+                         const std::optional<std::string> name_ross,const std::optional<std::string> name_s,
+                         const std::optional<std::string> name_ss,const std::optional<std::string> name_vs,
+                         const std::optional<std::string> name_hip,const std::optional<std::string> name_hd,
+                         const std::optional<std::string> name_gj,const std::optional<std::string> name_wise,
+                         const std::optional<std::string> name_2mass, const std::optional<std::string> name_gaia,
+                         const std::optional<std::string> name_tyc, const std::optional<std::string> name_ngc,
+                         const double parallax, const std::optional<double> teff, const std::optional<std::string>& spectralType,
+                         const std::optional<double> metalicity, const std::optional<double> luminosity, const std::optional<double> radius,
+                         const std::optional<double> magVB, const double x, const double y, const double z,
+                         const std::optional<long long> sourceId,const bool isBinary, const std::optional<int> type) {
+                    auto nameQueue = std::queue<std::string>();
 
                     if(!teff.has_value())
                     {
@@ -73,30 +76,32 @@ namespace thxsoft::export_s3_sectors
                             return;
                     }
 
-                    if(name != nullptr && strstr(name, "**") != nullptr)
+                    auto name2 = name;
+                    auto name_ss2 = name_ss;
+                    if(name.has_value() && name->starts_with("**"))
                     {
-                        name_ss = name;
-                        name = nullptr;
+                        name_ss2 = name;
+                        name2 = std::nullopt;
                     }
 
-                    pushNameString(nameQueue, name);
-                    pushNameString(nameQueue, name_wolf != nullptr ? name_wolf : name_ross);
-                    pushNameString(nameQueue, name_s != nullptr ? name_s : name_vs);
+                    pushNameString(nameQueue, name2);
+                    pushNameString(nameQueue, name_wolf.has_value() ? name_wolf : name_ross);
+                    pushNameString(nameQueue, name_s.has_value() ? name_s->substr(2) : name_vs.has_value() ? name_vs->substr(3) : name_vs);
 
-                    if(name_hip != nullptr)
+                    if(name_hip.has_value())
                         pushNameString(nameQueue, name_hip);
 
-                    pushNameString(nameQueue, name_hd != nullptr ? name_hd : name_gj != nullptr ? name_gj : name_wise);
-                    pushNameString(nameQueue, name_2mass != nullptr ? name_2mass : name_gaia);
-                    pushNameString(nameQueue, name_tyc != nullptr ? name_tyc : name_ngc);
+                    pushNameString(nameQueue, name_hd.has_value() ? name_hd : name_gj.has_value() ? name_gj : name_wise);
+                    pushNameString(nameQueue, name_2mass.has_value() ? name_2mass : name_gaia);
+                    pushNameString(nameQueue, name_tyc.has_value() ? name_tyc : name_ngc);
 
-                    if(name_ss != nullptr)
-                        pushNameString(nameQueue, name_ss);
+                    if(name_ss2.has_value())
+                        pushNameString(nameQueue, name_ss2->substr(3));
 
-                    string exportName1 = popNameString(nameQueue);
-                    string exportName2 = popNameString(nameQueue);;
-                    string exportName3 = popNameString(nameQueue);;
-                    string exportName4 = popNameString(nameQueue);;
+                    std::string exportName1 = popNameString(nameQueue);
+                    std::string exportName2 = popNameString(nameQueue);;
+                    std::string exportName3 = popNameString(nameQueue);;
+                    std::string exportName4 = popNameString(nameQueue);;
 
                     celestialObject.index = index;
                     celestialObject.name1 = exportName1;
@@ -111,8 +116,8 @@ namespace thxsoft::export_s3_sectors
                     celestialObject.radius = radius;
                     celestialObject.magnitudeVorB = magVB;
                     celestialObject.x = x;
-                    celestialObject.y = y;
-                    celestialObject.z = z;
+                    celestialObject.y = z; // Swapped Y,Z for Dan
+                    celestialObject.z = y;
                     celestialObject.sourceId = sourceId;
                     celestialObject.isBinary = isBinary;
                     celestialObject.type = static_cast<SimbadObjectTypes>(type.has_value() ? type.value() : 0);
@@ -148,23 +153,20 @@ namespace thxsoft::export_s3_sectors
 
             dbTransaction.commit();
         }
-        catch (const exception& e)
+        catch (const std::exception& e)
         {
             SPDLOG_ERROR("startQuery error", e.what());
             throw;
         }
     }
 
-    void DbReader::pushNameString(queue<string>& queue, const char* name)
+    void DbReader::pushNameString(std::queue<std::string>& queue, const std::optional<std::string>& name)
     {
-        if(name != nullptr)
-        {
-            const string str = name;
-            queue.push(str);
-        }
+        if(name.has_value())
+            queue.push(name.value());
     }
 
-    string DbReader::popNameString(queue<string>& queue)
+    std::string DbReader::popNameString(std::queue<std::string>& queue)
     {
         if(queue.empty())
             return "";
@@ -176,7 +178,7 @@ namespace thxsoft::export_s3_sectors
         return value;
     }
 
-    long long DbReader::getMaxIdAsync(const string& tableName) const
+    long long DbReader::getMaxIdAsync(const std::string& tableName) const
     {
         auto dbTransaction = transaction(*_dbReadConnection);
 

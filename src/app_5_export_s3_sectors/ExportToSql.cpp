@@ -8,31 +8,31 @@ using namespace thxsoft::database;
 
 namespace thxsoft::export_s3_sectors
 {
-    ExportToSql::ExportToSql(const string& dbFilePath, const bool deleteExistingDb)
+    ExportToSql::ExportToSql(const std::string& dbFilePath, const bool deleteExistingDb)
     {
         if(deleteExistingDb)
-            filesystem::remove(dbFilePath);
+            std::filesystem::remove(dbFilePath);
 
         if (sqlite3_open(dbFilePath.c_str(), &_db))
-            throw invalid_argument(std::format("Error opening database: {}.", sqlite3_errmsg(_db)));
+            throw std::invalid_argument(std::format("Error opening database: {}.", sqlite3_errmsg(_db)));
 
         createTable(ExportTableName);
 
         spdlog::info("Writing data to {}.", dbFilePath);
 
-        _batchAdder = make_shared<SqliteBatchUpdate>(_db, _upsertString);
+        _batchAdder = make_shared<SqliteBatchUpdate>(_db, _upsertString, 10 * 1024 * 1024);
     }
 
     ExportToSql::~ExportToSql()
     {
-        sqlite3_close(_db);
+        sqlite3_close_v2(_db);
     }
 
     void ExportToSql::commit() const
     {
         _batchAdder->commit();
 
-        finaliseTableCeation();
+        finaliseTableCreation();
         vacuumTable();
 
         sqlite3_close_v2(_db);
@@ -54,7 +54,7 @@ namespace thxsoft::export_s3_sectors
             );
     }
 
-    void ExportToSql::createTable(const string& tableName) const
+    void ExportToSql::createTable(const std::string& tableName) const
     {
         sqlite3_exec(_db, "PRAGMA journal_mode = MEMORY", nullptr, nullptr, nullptr);
         sqlite3_exec(_db, "PRAGMA locking_mode = EXCLUSIVE", nullptr, nullptr, nullptr);
@@ -74,7 +74,7 @@ namespace thxsoft::export_s3_sectors
         sqlite3_exec(_db, createTableCommand.c_str(), nullptr, nullptr, nullptr);
     }
 
-    void ExportToSql::finaliseTableCeation() const
+    void ExportToSql::finaliseTableCreation() const
     {
         spdlog::info("Indexing database column 'Sector'...");
         sqlite3_exec(_db, std::format("CREATE INDEX Sector_Idx ON {0} (Sector  ASC);", ExportTableName).c_str(), nullptr, nullptr, nullptr);

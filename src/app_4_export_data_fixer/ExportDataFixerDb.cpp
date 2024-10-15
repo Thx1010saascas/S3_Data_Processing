@@ -9,17 +9,17 @@ using namespace thxsoft::database;
 
 namespace thxsoft::export_data_fixer_db
 {
-    ExportDataFixerDb::ExportDataFixerDb(const string& connectionString)
+    ExportDataFixerDb::ExportDataFixerDb(const std::string& connectionString)
     {
         _dbReadConnection = make_shared<connection>(connectionString);
 
         if (!_dbReadConnection->is_open())
-            throw invalid_argument(std::format("Error opening database."));
+            throw std::invalid_argument(std::format("Error opening database."));
 
         _batchAdder = make_shared<PostgresBatchUpdate>(connectionString, _upsertString);
     }
 
-    void ExportDataFixerDb::startQuery(const function<void(const FixerRow *)>& func)
+    void ExportDataFixerDb::startQuery(const std::function<void(const FixerRow *)>& func)
     {
         try {
             auto work = new transaction(*_dbReadConnection);
@@ -39,14 +39,14 @@ namespace thxsoft::export_data_fixer_db
 
             delete work;
         }
-        catch (const exception &e)
+        catch (const std::exception &e)
         {
             SPDLOG_ERROR("startQuery error", e.what());
             throw;
         }
     }
 
-    void ExportDataFixerDb::append(const long long index, const string& name_s, const string& name_ss, const string& name_vs) const
+    void ExportDataFixerDb::append(const long long index, const std::string& name_s, const std::string& name_ss, const std::string& name_vs) const
     {
         _batchAdder->addRow(
             DatabaseUtils::asDbString(index),

@@ -10,30 +10,29 @@
 #include "Thx.h"
 #include "ThxWeb.h"
 
-using namespace std;
 
 void showSyntax();
-string getBaseQuery();
+std::string getBaseQuery();
 
 // http://simbad.u-strasbg.fr/simbad/sim-tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=csv&QUERY=
 // https://simbad.cds.unistra.fr/simbad/sim-tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=csv&QUERY=
 struct ThreadData
 {
-    ThreadData(string csvFilePath, string decompressPath, string fileName, chrono::time_point<chrono::steady_clock> startTime)
-        : csvFilePath(move(csvFilePath)),
+    ThreadData(std::string csvFilePath, std::string decompressPath, std::string fileName, std::chrono::time_point<std::chrono::steady_clock> startTime)
+        : csvFilePath(std::move(csvFilePath)),
           decompressPath(move(decompressPath)),
           fileName(move(fileName)),
           startTime(startTime)
     {
     }
-    const string csvFilePath;
-    const string decompressPath;
-    const string fileName;
-    chrono::time_point<chrono::steady_clock> startTime;
+    const std::string csvFilePath;
+    const std::string decompressPath;
+    const std::string fileName;
+    std::chrono::time_point<std::chrono::steady_clock> startTime;
 };
 
 size_t write_data(const char *ptr, const size_t size, const size_t nmemb, void *userdata) {
-    auto *stream = static_cast<ostream*>(userdata);
+    auto *stream = static_cast<std::ostream*>(userdata);
     const size_t count = size * nmemb;
     stream->write(ptr, count);
     return count;
@@ -55,17 +54,17 @@ int main(const int argc, const char *argv[])
             return -1;
         }
 
-        LoggingSetup::SetupDefaultLogging("logs/3_SimbadImportData.log");
+        LoggingSetup::setupDefaultLogging("logs/3_SimbadImportData.log");
 
-        const auto simbadUrl = string(argv[1]);
+        const auto simbadUrl = std::string(argv[1]);
         const auto *const postgresCnxString = argv[2];
-        const auto minParallax = 1.0/(stoi(argv[3]) / 3.26156378) * 1000; // Parallax to ly
+        const auto minParallax = 1.0/(std::stoi(argv[3]) / 3.26156378) * 1000; // Parallax to ly
 
-        const auto startTime = chrono::steady_clock::now();
+        const auto startTime = std::chrono::steady_clock::now();
 
         spdlog::info("Importing Simbad data.");
 
-        auto logTime = chrono::steady_clock::now();
+        auto logTime = std::chrono::steady_clock::now();
         auto stop = false;
         const ExportToSql dbWriter(postgresCnxString);
         const DbQuery dbQuery(postgresCnxString);
@@ -82,7 +81,7 @@ int main(const int argc, const char *argv[])
 
         const auto curl = curl_easy_init();
 
-        const auto stringOutputStream = make_shared<stringstream>();
+        const auto stringOutputStream = std::make_shared<std::stringstream>();
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, stringOutputStream.get());
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, 300);
@@ -93,11 +92,11 @@ int main(const int argc, const char *argv[])
             stringOutputStream->str("");
             stringOutputStream->clear();
 
-            const auto url = ThxWeb::encodedUrl(curl, vformat(simbadUrl + getBaseQuery(), make_format_args(nextRecordIndex)));
+            const auto url = ThxWeb::encodedUrl(curl, fmt::format(fmt::runtime(simbadUrl + getBaseQuery()), nextRecordIndex));
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
             if(const auto res = curl_easy_perform(curl); res != CURLE_OK)
-                throw runtime_error(format("Failed to download data: {0}", curl_easy_strerror(res)));
+                throw std::runtime_error(std::format("Failed to download data: {0}", curl_easy_strerror(res)));
 
             auto csvParser = CsvParser(stringOutputStream);
 
@@ -125,11 +124,11 @@ int main(const int argc, const char *argv[])
 
                 nextRecordIndex = csvParser.getValueAsInt64(SimbadRowProcessor::IndexColumnName).value() + 1;
 
-                if(chrono::duration_cast<chrono::seconds>(chrono::steady_clock::now() - logTime).count() >= 10)
+                if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - logTime).count() >= 10)
                 {
                     spdlog::info("Processed {:L}, added {:L} in {}.", nextRecordIndex, recordsImportedCount, Thx::toDurationString(startTime));
 
-                    logTime = chrono::steady_clock::now();
+                    logTime = std::chrono::steady_clock::now();
                 }
 
                 if(!SimbadRowProcessor::processRow(minParallax, csvParser))
@@ -153,7 +152,7 @@ int main(const int argc, const char *argv[])
 
         return 0;
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         spdlog::error(e.what());
         return 1;
@@ -162,13 +161,13 @@ int main(const int argc, const char *argv[])
 
 void showSyntax()
 {
-    cerr << "Syntax: ImportSimbadDb <Simbad DB URL> <Postgres Connection> <Distance Ly>" << endl;
-    cerr << "Import Simbad data within the specified number of ligh years to a Postgres database." << endl;
+    std::cerr << "Syntax: ImportSimbadDb <Simbad DB URL> <Postgres Connection> <Distance Ly>" << std::endl;
+    std::cerr << "Import Simbad data within the specified number of ligh years to a Postgres database." << std::endl;
 }
 
-string getBaseQuery()
+std::string getBaseQuery()
 {
-    const string BaseQuery = "SELECT TOP 60000 "
+    const std::string BaseQuery = "SELECT TOP 60000 "
     "oid as index,"
     "main_id,"
     "otypes as type,"

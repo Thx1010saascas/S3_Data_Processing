@@ -12,8 +12,11 @@ find_package(spdlog REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)
 
 include("${ThxSoftLibrary}/cmake/thxsoft_common/thxsoft_commonTargets.cmake")
+include_directories("${ThxSoftIncludes}/thxsoft_common")
 include("${ThxSoftLibrary}/cmake/thxsoft_database/thxsoft_databaseTargets.cmake")
+include_directories("${ThxSoftIncludes}/thxsoft_database")
 include("${ThxSoftLibrary}/cmake/thxsoft_database_postgres/thxsoft_database_postgresTargets.cmake")
+include_directories("${ThxSoftIncludes}/thxsoft_database_postgres")
 
 target_link_libraries(${TARGET_NAME}
         PRIVATE

@@ -10,19 +10,18 @@
 #include "GaiaRowProcessor.h"
 #include "LoggingSetup.h"
 
-using namespace std;
 
 void showSyntax();
 
 static bool _stop;
-static string _postgresCnxString;
-static atomic<long long> _recordsProcessedCount;
-static atomic<long long>  _recordsAddedCount;
+static std::string _postgresCnxString;
+static std::atomic<long long> _recordsProcessedCount;
+static std::atomic<long long>  _recordsAddedCount;
 static double _minParallax;
 
 struct ThreadData
 {
-    ThreadData(ExportProgressManager& exportProgressManager, const int filesProcessedCount, string csvFilePath, string decompressPath, string fileName, chrono::time_point<chrono::steady_clock> startTime)
+    ThreadData(ExportProgressManager& exportProgressManager, const int filesProcessedCount, std::string csvFilePath, std::string decompressPath, std::string fileName, std::chrono::time_point<std::chrono::steady_clock> startTime)
         : exportProgressManager(exportProgressManager),
           filesProcessedCount(filesProcessedCount),
           csvFilePath(move(csvFilePath)),
@@ -33,10 +32,10 @@ struct ThreadData
     }
     ExportProgressManager& exportProgressManager;
     const int filesProcessedCount;
-    const string csvFilePath;
-    const string decompressPath;
-    const string fileName;
-    chrono::time_point<chrono::steady_clock> startTime;
+    const std::string csvFilePath;
+    const std::string decompressPath;
+    const std::string fileName;
+    std::chrono::time_point<std::chrono::steady_clock> startTime;
 };
 
 int processCsv(const ThreadData* data)
@@ -54,7 +53,7 @@ int processCsv(const ThreadData* data)
         csvParser.appendColumn(GaiaRowProcessor::LuminosityColumnName);
         csvParser.appendColumn(GaiaRowProcessor::RadiusColumnName);
 
-        auto logTime = chrono::steady_clock::now();
+        auto logTime = std::chrono::steady_clock::now();
 
         const ExportToSql dbWriter(_postgresCnxString);
 
@@ -67,11 +66,11 @@ int processCsv(const ThreadData* data)
             }
 
             _recordsProcessedCount += 1;
-            if(chrono::duration_cast<chrono::seconds>(chrono::steady_clock::now() - logTime).count() >= 10)
+            if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - logTime).count() >= 10)
             {
                 spdlog::info("Processed {:L}, added {:L} in {}.", _recordsProcessedCount.load(), _recordsAddedCount.load(), Thx::toDurationString(data->startTime));
 
-                logTime = chrono::steady_clock::now();
+                logTime = std::chrono::steady_clock::now();
             }
 
             if(!GaiaRowProcessor::processRow(_minParallax, csvParser))
@@ -89,15 +88,15 @@ int processCsv(const ThreadData* data)
         data->exportProgressManager.add(data->fileName);
         data->exportProgressManager.writeState();
 
-        const auto decompressFilePath = filesystem::path(data->decompressPath) / data->fileName;
+        const auto decompressFilePath = std::filesystem::path(data->decompressPath) / data->fileName;
 
         remove(decompressFilePath);
 
         delete data;
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
-        spdlog::error(format("Error processing file: {}: {}", data->fileName, e.what()));
+        spdlog::error(std::format("Error processing file: {}: {}", data->fileName, e.what()));
     }
     return 1;
 }
@@ -118,15 +117,15 @@ int main(const int argc, const char *argv[])
             return -1;
         }
 
-        LoggingSetup::SetupDefaultLogging("logs/2_GaiaImportCsvs.log");
+        LoggingSetup::setupDefaultLogging("logs/2_GaiaImportCsvs.log");
 
         const int MaxThreadLimit = 15;
         const auto csvPath = argv[1];
-        const auto decompressPath = filesystem::current_path() / "Decompress";
+        const auto decompressPath = std::filesystem::current_path() / "Decompress";
         _postgresCnxString = argv[2];
-        _minParallax = 1.0/(stoi(argv[3]) / 3.26156378) * 1000; // Parallax to ly
+        _minParallax = 1.0/(std::stoi(argv[3]) / 3.26156378) * 1000; // Parallax to ly
 
-        auto maxThreadCount = argc == 5 ? stoi(argv[4]) : 5;
+        auto maxThreadCount = argc == 5 ? std::stoi(argv[4]) : 5;
 
         if(maxThreadCount > MaxThreadLimit)
         {
@@ -137,17 +136,17 @@ int main(const int argc, const char *argv[])
         remove_all(decompressPath);
         create_directory(decompressPath);
 
-        const auto startTime = chrono::steady_clock::now();
+        const auto startTime = std::chrono::steady_clock::now();
 
-        ExportProgressManager exportProgressManager((filesystem::path(csvPath) / "ProcessingState.log").string());
+        ExportProgressManager exportProgressManager((std::filesystem::path(csvPath) / "ProcessingState.log").string());
 
-        auto concurrentJobs = vector<future<int>>();
+        auto concurrentJobs = std::vector<std::future<int>>();
 
         spdlog::info("Importing Gaia CSV data.");
 
         auto filesProcessedCount = 0;
 
-        for (const auto& path : filesystem::directory_iterator(csvPath))
+        for (const auto& path : std::filesystem::directory_iterator(csvPath))
         {
             if(_stop)
             {
@@ -157,7 +156,7 @@ int main(const int argc, const char *argv[])
             if(path.is_directory())
                 continue;
 
-            const string csvFilePath = path.path().string();
+            const std::string csvFilePath = path.path().string();
 
             if(!csvFilePath.ends_with(".gz"))
                 continue;
@@ -174,7 +173,7 @@ int main(const int argc, const char *argv[])
 
             auto data = new ThreadData(exportProgressManager, filesProcessedCount, csvFilePath, decompressPath.string(), fileName, startTime);
 
-            concurrentJobs.push_back(async(launch::async, processCsv, data));
+            concurrentJobs.push_back(async(std::launch::async, processCsv, data));
 
             ConcurrentJob::waitForAvailableThread(&concurrentJobs, maxThreadCount);
         }
@@ -185,7 +184,7 @@ int main(const int argc, const char *argv[])
 
         return 0;
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         spdlog::error(e.what());
         return 1;
@@ -194,6 +193,6 @@ int main(const int argc, const char *argv[])
 
 void showSyntax()
 {
-    cerr << "Syntax: ImportGaiaCsv <Gaia CSV Folder> <Postgres Connection> <Distance Ly> [MaxThreads = 5]" << endl;
-    cerr << "Import Gaia data within the specified number of ligh years to a Postgres database." << endl;
+    std::cerr << "Syntax: ImportGaiaCsv <Gaia CSV Folder> <Postgres Connection> <Distance Ly> [MaxThreads = 5]" << std::endl;
+    std::cerr << "Import Gaia data within the specified number of ligh years to a Postgres database." << std::endl;
 }

@@ -2,7 +2,6 @@
 #include <string>
 #include <format>
 
-using namespace std;
 
 namespace thxsoft::export_s3_sectors
 {
@@ -35,14 +34,14 @@ namespace thxsoft::export_s3_sectors
             return !(*this == other);
         }
 
-        [[nodiscard]] string toString() const
+        [[nodiscard]] std::string toString() const
         {
-            return format("X={}, Y={}, Z={}", z, y, z);
+            return std::format("X={}, Y={}, Z={}", z, y, z);
         }
 
-        [[nodiscard]] string toFileName() const
+        [[nodiscard]] std::string toFileName() const
         {
-            return format("Gaia_{}_{}_{}.csv", z, y, z);
+            return std::format("Gaia_{}_{}_{}.csv", z, y, z);
         }
     };
 }

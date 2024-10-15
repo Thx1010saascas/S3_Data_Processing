@@ -49,14 +49,14 @@ void GaiaRowProcessor::populateLuminosityAndRadius(const CsvParser& csvParser)
             const auto parsecs = AstronomyConverter::toParsecsMas(csvParser.getValueAsDouble(ParallaxColumnName).value());
             const auto luminosityLSol = LuminanceCalculator::calculateGBand(mag.value(), parsecs, teff);
 
-            if (isfinite(luminosityLSol))
+            if (std::isfinite(luminosityLSol))
             {
                 const auto radius = RadiusCalculator::calculateWithLSol(luminosityLSol, teff);
 
-                if (isfinite(radius))
+                if (std::isfinite(radius))
                 {
-                    csvParser.setValue("luminosity", format("{:.3f}", luminosityLSol));
-                    csvParser.setValue("radius", format("{:.3f}", AstronomyConverter::toRSol(radius)));
+                    csvParser.setValue("luminosity", std::format("{:.3f}", luminosityLSol));
+                    csvParser.setValue("radius", std::format("{:.3f}", AstronomyConverter::toRSol(radius)));
                 }
             }
         }
@@ -87,7 +87,7 @@ bool GaiaRowProcessor::setTeffFromCalculation(const CsvParser& csvParser)
     if (temperature == nullptr)
         return false;
 
-    csvParser.setValue(TeffColumnName, to_string(temperature->teff));
+    csvParser.setValue(TeffColumnName, std::to_string(temperature->teff));
     csvParser.setValue(TeffSourceColumnName, "2");
 
     return true;

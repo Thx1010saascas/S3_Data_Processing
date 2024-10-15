@@ -41,13 +41,13 @@ bool SimbadRowProcessor::processRow(const double minParallax, const CsvParser& c
         teff.has_value())
     {
         const auto intTeff = static_cast<int>(teff.value());
-        csvParser.setValue(TeffColumnName, to_string(intTeff));
+        csvParser.setValue(TeffColumnName, std::to_string(intTeff));
         populateLuminosityAndRadius(csvParser, intTeff);
     }
     return true;
 }
 
-bool SimbadRowProcessor::hasUpperAndLower(const string& string)
+bool SimbadRowProcessor::hasUpperAndLower(const std::string& string)
 {
     auto hasUpper = false;
     auto hasLower = false;
@@ -64,7 +64,7 @@ bool SimbadRowProcessor::hasUpperAndLower(const string& string)
     return false;
 }
 
-string SimbadRowProcessor::getIfInCatalog(const vector<string>& cats, const string& catalogue)
+std::string SimbadRowProcessor::getIfInCatalog(const std::vector<std::string>& cats, const std::string& catalogue)
 {
     for(const auto& cat : cats)
     {
@@ -82,7 +82,7 @@ string SimbadRowProcessor::getIfInCatalog(const vector<string>& cats, const stri
 void SimbadRowProcessor::populateNames(const CsvParser& csvParser)
 {
     const auto cats = Thx::split(csvParser.getValue(NameColumnName), "|");
-    string name = "";
+    std::string name = "";
 
     if(const auto mainId = csvParser.getValue(MainIdColumnName); mainId.starts_with("NAME "))
     {
@@ -173,16 +173,16 @@ void SimbadRowProcessor::populateObjectType(const CsvParser& csvParser)
         case hash("AG?"):
         case hash("AGN"): objectType |= ActiveGalaxyNucleus; break;
         default:
-            if(type.find('*') != string::npos)
+            if(type.find('*') != std::string::npos)
                 objectType |= Star;
             break;
         }
     }
 
-    csvParser.setValue(ObjectTypeColumnName, to_string(objectType));
+    csvParser.setValue(ObjectTypeColumnName, std::to_string(objectType));
 }
 
-void SimbadRowProcessor::populateLuminosityAndRadius(const CsvParser& csvParser, const optional<int>& teff)
+void SimbadRowProcessor::populateLuminosityAndRadius(const CsvParser& csvParser, const std::optional<int>& teff)
 {
     if (LuminanceCalculator::teffIsInGBandCalculationRange(teff.value()))
     {
@@ -192,13 +192,13 @@ void SimbadRowProcessor::populateLuminosityAndRadius(const CsvParser& csvParser,
             const auto parsecs = AstronomyConverter::toParsecsMas(csvParser.getValueAsDouble(ParallaxColumnName).value());
 
             if (const auto luminosityLSol = LuminanceCalculator::calculateGBand(mag.value(), parsecs, teff.value());
-                isfinite(luminosityLSol))
+                std::isfinite(luminosityLSol))
             {
                 if (const auto radius = RadiusCalculator::calculateWithLSol(luminosityLSol, teff.value());
-                    isfinite(radius))
+                    std::isfinite(radius))
                 {
-                    csvParser.setValue("luminosity", format("{:.3f}", luminosityLSol));
-                    csvParser.setValue("radius", format("{:.3f}", AstronomyConverter::toRSol(radius)));
+                    csvParser.setValue("luminosity", std::format("{:.3f}", luminosityLSol));
+                    csvParser.setValue("radius", std::format("{:.3f}", AstronomyConverter::toRSol(radius)));
                 }
             }
         }
@@ -219,7 +219,7 @@ bool SimbadRowProcessor::setTeffFromCalculation(const CsvParser& csvParser)
             return false;
     }
 
-    csvParser.setValue("teff",  teff.has_value() ? to_string(teff.value()) : "");
+    csvParser.setValue("teff",  teff.has_value() ? std::to_string(teff.value()) : "");
 
     return true;
 }
@@ -232,16 +232,16 @@ void SimbadRowProcessor::populateGalacticCoordinates(const CsvParser& csvParser)
 
     const auto galacticCoordinates = GalacticCoordinate::equatorialToGalactic(ra, dec);
 
-    csvParser.setValue(GLatColumnName, to_string(galacticCoordinates->latitude));
-    csvParser.setValue(GLonColumnName, to_string(galacticCoordinates->longitude));
+    csvParser.setValue(GLatColumnName, std::to_string(galacticCoordinates->latitude));
+    csvParser.setValue(GLonColumnName, std::to_string(galacticCoordinates->longitude));
 }
 
-string SimbadRowProcessor::getCleanName(const string& value)
+std::string SimbadRowProcessor::getCleanName(const std::string& value)
 {
     if (value.empty())
         return value;
 
-    string name;
+    std::string name;
     if (value.starts_with("NAME "))
     {
         name = value.substr(strlen("NAME "));

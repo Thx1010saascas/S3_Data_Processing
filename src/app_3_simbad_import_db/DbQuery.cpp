@@ -1,12 +1,12 @@
 #include "DbQuery.h"
 
-DbQuery::DbQuery(const string& connectionString)
+DbQuery::DbQuery(const std::string& connectionString)
 {
     _dbWriteConnection = new pqxx::connection(connectionString);
 
     if (!_dbWriteConnection->is_open())
     {
-        throw invalid_argument(format("Error opening Postgres database."));
+        throw std::invalid_argument(std::format("Error opening Postgres database."));
     }
 }
 

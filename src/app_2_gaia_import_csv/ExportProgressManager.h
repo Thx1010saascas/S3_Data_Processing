@@ -3,19 +3,18 @@
 #include <semaphore>
 #include <unordered_set>
 
-using namespace std;
 
 struct ExportProgressManager {
-    explicit ExportProgressManager(const string& stateFilePath);
+    explicit ExportProgressManager(const std::string& stateFilePath);
 
     void writeState();
 
-    [[nodiscard]]bool isComplete(const string& label) const;
+    [[nodiscard]]bool isComplete(const std::string& label) const;
 
-    void add(const string& label);
+    void add(const std::string& label);
 
 private:
-    const string _stateFilePath;
-    counting_semaphore<1> _sempaphore;
-    unordered_set<string> _readFiles;
+    const std::string _stateFilePath;
+    std::counting_semaphore<1> _sempaphore;
+    std::unordered_set<std::string> _readFiles;
 };

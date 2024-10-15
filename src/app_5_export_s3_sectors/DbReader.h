@@ -5,23 +5,22 @@
 #include "CelestialObject.h"
 #include "SpectralClassifier.h"
 
-using namespace std;
 
 namespace thxsoft::export_s3_sectors
 {
     class DbReader {
     public:
-        explicit DbReader(const string&, int searchRangeLimitLy, int objectBitMask);
+        explicit DbReader(const std::string&, int searchRangeLimitLy, int objectBitMask);
 
-        void getStars(bool getNonGaiaStars, const function<void(const CelestialObject *)>&) const;
-        static void pushNameString(queue<string>& queue, const char* name);
-        static string popNameString(queue<string>& queue);
+        void getStars(bool getNonGaiaStars, const std::function<void(const CelestialObject *)>& func) const;
+        static void pushNameString(std::queue<std::string>& queue, const std::optional<std::string>& name);
+        static std::string popNameString(std::queue<std::string>& queue);
 
     private:
         static double GetSectorNumber(double v);
-        [[nodiscard]] long long getMaxIdAsync(const string& tableName) const;
+        [[nodiscard]] long long getMaxIdAsync(const std::string& tableName) const;
 
-        const pqxx::zview _nonGaiaObjectsQuery =
+        const std::string _nonGaiaObjectsQuery =
             "SELECT simbad.index,"
             "COALESCE(new_name, name),name_wolf,name_ross,COALESCE(new_name_s, name_s),COALESCE(new_name_ss, name_ss),COALESCE(new_name_vs,name_vs),"
             "name_hip, name_hd, name_gj,name_wise,name_2mass,name_gaia,name_tyc,name_ngc,parallax,teff,"
@@ -30,7 +29,7 @@ namespace thxsoft::export_s3_sectors
             "FROM simbad LEFT OUTER JOIN export_overrides nf ON nf.index = simbad.index "
             "WHERE id >= {} AND id < {} AND distance_ly <= {} AND object_type & {} > 0 AND "
             "(g_source_id IS NULL OR (g_source_id IS NOT NULL AND (SELECT COUNT(*) FROM gaia WHERE source_id = g_source_id) = 0))";
-        const pqxx::zview _gaiaObjectsQuery =
+        const std::string _gaiaObjectsQuery =
             "SELECT g.index,"
             "COALESCE(new_name, name),name_wolf,name_ross,COALESCE(new_name_s, name_s),COALESCE(new_name_ss, name_ss),COALESCE(new_name_vs,name_vs),"
             "name_hip, name_hd, name_gj,name_wise,name_2mass,COALESCE(name_gaia, 'Gaia DR3 ' || source_id),name_tyc,name_ngc,"
@@ -43,10 +42,10 @@ namespace thxsoft::export_s3_sectors
 
         const int QueryPageSize = 250000;
 
-        shared_ptr<astronomy::SpectralClassifier> spectralClassifier;
-        shared_ptr<pqxx::connection> _dbReadConnection;
+        std::shared_ptr<astronomy::SpectralClassifier> spectralClassifier;
+        std::shared_ptr<pqxx::connection> _dbReadConnection;
         const int _searchRangeLimitLy;
         const int _objectBitMask;
-        chrono::time_point<chrono::steady_clock> _start;
+        std::chrono::time_point<std::chrono::steady_clock> _start;
     };
 }

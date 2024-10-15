@@ -4,7 +4,6 @@
 #include "LoggingSetup.h"
 #include "Thx.h"
 
-using namespace std;
 using namespace thxsoft::database;
 using namespace thxsoft::export_s3_sectors;
 
@@ -26,16 +25,16 @@ int main(const int argc, const char *argv[])
             return -1;
         }
 
-        LoggingSetup::SetupDefaultLogging("logs/5_ExportS3Database.log");
+        LoggingSetup::setupDefaultLogging("logs/5_ExportS3Database.log");
 
-        auto sqliteDbPath = filesystem::path(argv[1]);
+        auto sqliteDbPath = std::filesystem::path(argv[1]);
         const auto postgresCnxString = argv[2];
-        const auto distanceLy = stoi(argv[3]);
+        const auto distanceLy = std::stoi(argv[3]);
         const auto appendMode = argc == 6 ? argv[5] == "append" : false;
 
         auto objectType = 0;
 
-        const auto start = chrono::steady_clock::now();
+        const auto start = std::chrono::steady_clock::now();
 
         for(const auto& type : Thx::split(argv[4], ","))
         {
@@ -43,9 +42,9 @@ int main(const int argc, const char *argv[])
             {
                 objectType |= SimbadObjectTypesMap.at(type);
             }
-            catch (exception&)
+            catch (std::exception&)
             {
-                cerr << "Object type '" << type << "' was not found. Check your spelling and capitalisation.";
+                std::cerr << "Object type '" << type << "' was not found. Check your spelling and capitalisation.";
                 showSyntax();
                 return -1;
             }
@@ -53,7 +52,7 @@ int main(const int argc, const char *argv[])
 
         const auto deleteExistingDb = !appendMode;
 
-        sqliteDbPath /= format("S3_{}ly{}.db", distanceLy, appendMode ? "" : (string("_") + argv[4]));
+        sqliteDbPath /= std::format("S3_{}ly{}.db", distanceLy, appendMode ? "" : (std::string("_") + argv[4]));
 
         spdlog::info("Writing to '{}'", sqliteDbPath.string());
 
@@ -65,8 +64,28 @@ int main(const int argc, const char *argv[])
 
         spdlog::info("Processing Simbad data.");
 
+        auto testSuccessCount = 0;
+
         dbReader.getStars(true, [&] (const CelestialObject* celestialObject)
         {
+            // Sanity checks
+            if(celestialObject->name1 == "Sol")
+            {
+                if(celestialObject->sectorId != "XN267YP0ZP1")
+                    throw pqxx::data_exception("Sol sector is in the wrong place!");
+
+                testSuccessCount++;
+            }
+            else if(celestialObject->name1 == "Sirius")
+            {
+                if(round(celestialObject->x) != -26676 ||
+                    round(celestialObject->y) != -5 ||
+                    round(celestialObject->z) != 59)
+                    throw pqxx::data_exception("Sirius sector is in the wrong place!");
+
+                testSuccessCount++;
+            }
+
             dbWriter.append(celestialObject);
 
             if(++addedCount % 100000 == 0)
@@ -74,6 +93,9 @@ int main(const int argc, const char *argv[])
                 spdlog::info("Added {:L} objects in {}.", addedCount, Thx::toDurationString(start));
             }
         });
+
+        if(testSuccessCount != 2)
+            throw pqxx::data_exception("Tests did not pass.");
 
         spdlog::info("Processing Gaia data.");
 
@@ -93,7 +115,7 @@ int main(const int argc, const char *argv[])
 
         return 0;
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         spdlog::error(e.what());
         return 1;
@@ -102,24 +124,24 @@ int main(const int argc, const char *argv[])
 
 void showSyntax()
 {
-    cerr << "Syntax: ExportS3Sectors <SQlite DB Folder> <Postgres Connection> <Distance Ly> <Object Types (comma separated)> <Append Db>" << endl;
-    cerr << "Export Simbad and Gaia data within the specified number of ligh years to an Sqlite database." << endl;
-    cerr << "If <AppendDB> == 'append', then append to the 'stars_xxxly.db' file, otherwise delete it. If not append, then the Object Type is added to the file name. Defauls to false." << endl;
-    cerr << "<ObjectType> defines the type of object to be exported." << endl;
-    cerr << "    Star             - By itself, 'Star' includes NeutronStar, BrownDwarf, WhiteDwarf, LowMassStar" << endl;
-    cerr << "    StarGroup" << endl;
-    cerr << "    LowMassStar" << endl;
-    cerr << "    BrownDwarf" << endl;
-    cerr << "    Planet" << endl;
-    cerr << "    Cluster" << endl;
-    cerr << "    OpenCluster" << endl;
-    cerr << "    GlobularCluster" << endl;
-    cerr << "    XRay" << endl;
-    cerr << "    NeutronStar" << endl;
-    cerr << "    WhiteDwarf" << endl;
-    cerr << "    Nebula" << endl;
-    cerr << "    SuperNovae" << endl;
-    cerr << "    PartOfGalaxy" << endl;
-    cerr << "    Galaxy" << endl;
-    cerr << "    ActiveGalaxyNucleus" << endl;
+    std::cerr << "Syntax: ExportS3Sectors <SQlite DB Folder> <Postgres Connection> <Distance Ly> <Object Types (comma separated)> <Append Db>" << std::endl;
+    std::cerr << "Export Simbad and Gaia data within the specified number of ligh years to an Sqlite database." << std::endl;
+    std::cerr << "If <AppendDB> == 'append', then append to the 'stars_xxxly.db' file, otherwise delete it. If not append, then the Object Type is added to the file name. Defauls to false." << std::endl;
+    std::cerr << "<ObjectType> defines the type of object to be exported." << std::endl;
+    std::cerr << "    Star             - By itself, 'Star' includes NeutronStar, BrownDwarf, WhiteDwarf, LowMassStar" << std::endl;
+    std::cerr << "    StarGroup" << std::endl;
+    std::cerr << "    LowMassStar" << std::endl;
+    std::cerr << "    BrownDwarf" << std::endl;
+    std::cerr << "    Planet" << std::endl;
+    std::cerr << "    Cluster" << std::endl;
+    std::cerr << "    OpenCluster" << std::endl;
+    std::cerr << "    GlobularCluster" << std::endl;
+    std::cerr << "    XRay" << std::endl;
+    std::cerr << "    NeutronStar" << std::endl;
+    std::cerr << "    WhiteDwarf" << std::endl;
+    std::cerr << "    Nebula" << std::endl;
+    std::cerr << "    SuperNovae" << std::endl;
+    std::cerr << "    PartOfGalaxy" << std::endl;
+    std::cerr << "    Galaxy" << std::endl;
+    std::cerr << "    ActiveGalaxyNucleus" << std::endl;
 }

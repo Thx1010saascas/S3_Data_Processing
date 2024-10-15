@@ -11,27 +11,25 @@
 #include "LoggingSetup.h"
 #include "Thx.h"
 
-using namespace std;
-
 static bool _stop;
-void getCsvDownloads(const string& url, vector<string>& fileLinks, vector<int>& fileSizes);
+void getCsvDownloads(const std::string& url, std::vector<std::string>& fileLinks, std::vector<int>& fileSizes);
 void showSyntax();
 
 struct ThreadData
 {
-    ThreadData(const filesystem::path& csvFilePath, const int fileNumber, string  url)
+    ThreadData(const std::filesystem::path& csvFilePath, const int fileNumber, std::string  url)
         :   csvFilePath(csvFilePath),
             fileNumber(fileNumber),
             url(move(url))
     {
     }
 
-    const filesystem::path csvFilePath;
+    const std::filesystem::path csvFilePath;
     const int fileNumber;
-    const string url;
+    const std::string url;
 };
 
-void find_definitions(vector<string>& links, vector<int>& sizes, const GumboNode* node)
+void find_definitions(std::vector<std::string>& links, std::vector<int>& sizes, const GumboNode* node)
 {
     if (node->type != GUMBO_NODE_ELEMENT)
     {
@@ -41,7 +39,7 @@ void find_definitions(vector<string>& links, vector<int>& sizes, const GumboNode
     const auto attr = gumbo_get_attribute(&node->v.element.attributes, "href");
     if (attr != nullptr && strstr(attr->value, "GaiaSource_") != nullptr)
     {
-        const auto line = string(node->v.element.original_tag.data);
+        const auto line = std::string(node->v.element.original_tag.data);
         const auto newLineIndex = line.find('\n');
         const auto fileSize = Thx::trim(line.substr(newLineIndex - 20, 20));
         sizes.push_back(stoi(fileSize));
@@ -56,7 +54,7 @@ void find_definitions(vector<string>& links, vector<int>& sizes, const GumboNode
     }
 }
 size_t write_data(const char *ptr, const size_t size, const size_t nmemb, void *userdata) {
-    auto *stream = static_cast<ostream*>(userdata);
+    auto *stream = static_cast<std::ostream*>(userdata);
     const size_t count = size * nmemb;
     stream->write(ptr, count);
     return count;
@@ -67,7 +65,7 @@ int downloadCsv(const ThreadData* data)
     {
         spdlog::info("Downloading file #{:L} {}.", data->fileNumber, data->csvFilePath.filename().string());
 
-        ofstream fileOutputStream(data->csvFilePath, ios::binary);
+        std::ofstream fileOutputStream(data->csvFilePath, std::ios::binary);
 
         const auto curl = curl_easy_init();
 
@@ -76,7 +74,7 @@ int downloadCsv(const ThreadData* data)
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &fileOutputStream);
 
         if(const auto res = curl_easy_perform(curl); res != CURLE_OK)
-            throw runtime_error(format("Failed to download file '{0}': {1}", data->csvFilePath.filename().string(), curl_easy_strerror(res)));
+            throw std::runtime_error(std::format("Failed to download file '{0}': {1}", data->csvFilePath.filename().string(), curl_easy_strerror(res)));
 
         fileOutputStream.flush();
 
@@ -84,9 +82,9 @@ int downloadCsv(const ThreadData* data)
 
         delete data;
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
-        spdlog::error(format("Error processing file #{:L}: {}", data->fileNumber, e.what()));
+        spdlog::error(std::format("Error processing file #{:L}: {}", data->fileNumber, e.what()));
     }
 
     return 1;
@@ -108,25 +106,25 @@ int main(const int argc, const char *argv[])
             return -1;
         }
 
-        LoggingSetup::SetupDefaultLogging("logs/1_GaiaCsvDownloader.log");
+        LoggingSetup::setupDefaultLogging("logs/1_GaiaCsvDownloader.log");
 
-        const auto url = filesystem::path(argv[1]);
-        const auto csvPath = filesystem::path(argv[2]);
-        const auto maxConcurrentDownloads = argc == 4 ? stol(argv[3]) : 50;
+        const auto url = std::filesystem::path(argv[1]);
+        const auto csvPath = std::filesystem::path(argv[2]);
+        const auto maxConcurrentDownloads = argc == 4 ? std::stol(argv[3]) : 50;
 
         if (!exists(csvPath))
             create_directory(csvPath);
 
-        auto concurrentJobs = vector<future<int>>();
+        auto concurrentJobs = std::vector<std::future<int>>();
 
         curl_global_init(CURL_GLOBAL_ALL);
 
-        vector<future<int>> concurrentJobs1;
+        std::vector<std::future<int>> concurrentJobs1;
         spdlog::info("Downloading Gaia CSV data.");
 
         auto fileNumber = 0;
-        auto fileNames = vector<string>();
-        auto fileSizes = vector<int>();
+        auto fileNames = std::vector<std::string>();
+        auto fileSizes = std::vector<int>();
         getCsvDownloads(url.string(), fileNames, fileSizes);
 
         for(auto i=0; i<fileNames.size(); ++i)
@@ -156,9 +154,9 @@ int main(const int argc, const char *argv[])
                 remove(csvFilePath);
             }
 
-            auto data = new ThreadData(ref(csvFilePath), fileNumber, fileLink.string());
+            auto data = new ThreadData(std::ref(csvFilePath), fileNumber, fileLink.string());
 
-            concurrentJobs.push_back(async(launch::async, downloadCsv, data));
+            concurrentJobs.push_back(async(std::launch::async, downloadCsv, data));
 
             ConcurrentJob::waitForAvailableThread(&concurrentJobs, maxConcurrentDownloads);
         }
@@ -169,16 +167,16 @@ int main(const int argc, const char *argv[])
 
         return 0;
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         spdlog::error(e.what());
         return 1;
     }
 }
 
-void getCsvDownloads(const string& url, vector<string>& fileLinks, vector<int>& fileSizes)
+void getCsvDownloads(const std::string& url, std::vector<std::string>& fileLinks, std::vector<int>& fileSizes)
 {
-    ostringstream os;
+    std::ostringstream os;
 
     const auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -186,7 +184,7 @@ void getCsvDownloads(const string& url, vector<string>& fileLinks, vector<int>& 
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &os);
 
     if(const auto res = curl_easy_perform(curl); res != CURLE_OK)
-        throw runtime_error(format("Failed to get file list from '{0}': {1}", url, curl_easy_strerror(res)));
+        throw std::runtime_error(std::format("Failed to get file list from '{0}': {1}", url, curl_easy_strerror(res)));
 
     os.flush();
 
@@ -199,13 +197,13 @@ void getCsvDownloads(const string& url, vector<string>& fileLinks, vector<int>& 
     find_definitions(fileLinks, fileSizes, output->root);
 
     if(fileLinks.size() != fileSizes.size())
-        throw runtime_error("Gaia website structure changed! Aborting.");
+        throw std::runtime_error("Gaia website structure changed! Aborting.");
 
     gumbo_destroy_output(&kGumboDefaultOptions, output);
 }
 
 void showSyntax()
 {
-    cerr << "Syntax: GaiaCsvDownloader <Gaia CSV Location URL> <CSV Download Folder> [Max Concurrent Downloads = 50]" << endl;
-    cerr << "Download Gaia CSV data to a folder." << endl;
+    std::cerr << "Syntax: GaiaCsvDownloader <Gaia CSV Location URL> <CSV Download Folder> [Max Concurrent Downloads = 50]" << std::endl;
+    std::cerr << "Download Gaia CSV data to a folder." << std::endl;
 }
