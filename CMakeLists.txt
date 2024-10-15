@@ -18,9 +18,9 @@ if (USING_MINGW STREQUAL "1")
     set(VCPKG_TRIPLET x64-mingw-static)
     add_link_options(-static-libgcc -static-libstdc++ --static)
 else()
-    set(VCPKG_TRIPLET x64-windows-static)
+    set(VCPKG_TRIPLET x64-windows-static-md)
     # Needed if we are using a x64-windows-static VCPKG triplet.
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 if (IS_DEBUG STREQUAL "1")
