@@ -30,7 +30,7 @@ int main(const int argc, const char *argv[])
         auto sqliteDbPath = std::filesystem::path(argv[1]);
         const auto postgresCnxString = argv[2];
         const auto distanceLy = std::stoi(argv[3]);
-        const auto appendMode = argc == 6 ? argv[5] == "append" : false;
+        const auto appendMode = argc == 6 ? std::strcmp(argv[5], "append") == 0 : false;
 
         auto objectType = 0;
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <utility>
 #include <ConcurrentJob.h>
 #ifndef NOMINMAX
     #define NOMINMAX 
@@ -17,10 +18,10 @@ void showSyntax();
 
 struct ThreadData
 {
-    ThreadData(const std::filesystem::path& csvFilePath, const int fileNumber, std::string  url)
-        :   csvFilePath(csvFilePath),
+    ThreadData(std::filesystem::path  csvFilePath, const int fileNumber, std::string  url)
+        :   csvFilePath(std::move(csvFilePath)),
             fileNumber(fileNumber),
-            url(move(url))
+            url(std::move(url))
     {
     }
 
@@ -131,11 +132,11 @@ int main(const int argc, const char *argv[])
         {
             ++fileNumber;
 
-            if(!_stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
-            {
-                spdlog::warn("**** Stop requested, wait for current processes to finish.");
-                _stop = true;
-            }
+            // if(!_stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
+            // {
+            //     spdlog::warn("**** Stop requested, wait for current processes to finish.");
+            //     _stop = true;
+            // }
 
             const auto fileName = fileNames[i];
             const auto fileSize = fileSizes[i];

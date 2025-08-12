@@ -72,7 +72,7 @@ namespace thxsoft::export_s3_sectors
                     if(!teff.has_value())
                     {
                         //Stars have to have a Teff.
-                        if(!type.has_value() || type.value() & static_cast<int>(Star) > 0)
+                        if(!type.has_value() || (type.value() & static_cast<int>(Star)) > 0)
                             return;
                     }
 
@@ -182,7 +182,7 @@ namespace thxsoft::export_s3_sectors
     {
         auto dbTransaction = transaction(*_dbReadConnection);
 
-        const auto result = dbTransaction.exec1(std::format("SELECT MAX(id) FROM {};", tableName));
+        const auto result = dbTransaction.exec(std::format("SELECT MAX(id) FROM {};", tableName)).one_row();
 
         dbTransaction.commit();
 

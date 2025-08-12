@@ -34,7 +34,7 @@ long long DbQuery::getLastRecordIndexAsync() const
 {
     auto txn = pqxx::transaction(*_dbWriteConnection);
 
-    const auto row = txn.exec1("SELECT MAX(index) FROM simbad");
+    const auto row = txn.exec("SELECT MAX(index) FROM simbad").one_row();
 
     txn.commit();
 

@@ -10,7 +10,6 @@
 #include "GaiaRowProcessor.h"
 #include "LoggingSetup.h"
 
-
 void showSyntax();
 
 static bool _stop;
@@ -24,9 +23,9 @@ struct ThreadData
     ThreadData(ExportProgressManager& exportProgressManager, const int filesProcessedCount, std::string csvFilePath, std::string decompressPath, std::string fileName, std::chrono::time_point<std::chrono::steady_clock> startTime)
         : exportProgressManager(exportProgressManager),
           filesProcessedCount(filesProcessedCount),
-          csvFilePath(move(csvFilePath)),
-          decompressPath(move(decompressPath)),
-          fileName(move(fileName)),
+          csvFilePath(std::move(csvFilePath)),
+          decompressPath(std::move(decompressPath)),
+          fileName(std::move(fileName)),
           startTime(startTime)
     {
     }
@@ -59,11 +58,11 @@ int processCsv(const ThreadData* data)
 
         while(csvParser.readLine())
         {
-            if(!_stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
-            {
-                spdlog::warn("**** Stop requested, wait for current processes to finish.");
-                _stop = true;
-            }
+            // if(!_stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
+            // {
+            //     spdlog::warn("**** Stop requested, wait for current processes to finish.");
+            //     _stop = true;
+            // }
 
             _recordsProcessedCount += 1;
             if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - logTime).count() >= 10)

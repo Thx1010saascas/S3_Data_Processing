@@ -20,8 +20,8 @@ struct ThreadData
 {
     ThreadData(std::string csvFilePath, std::string decompressPath, std::string fileName, std::chrono::time_point<std::chrono::steady_clock> startTime)
         : csvFilePath(std::move(csvFilePath)),
-          decompressPath(move(decompressPath)),
-          fileName(move(fileName)),
+          decompressPath(std::move(decompressPath)),
+          fileName(std::move(fileName)),
           startTime(startTime)
     {
     }
@@ -116,11 +116,11 @@ int main(const int argc, const char *argv[])
 
             while(csvParser.readLine())
             {
-                if(!stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
-                {
-                    spdlog::warn("**** Stop requested, wait for current processes to finish.");
-                    stop = true;
-                }
+                // if(!stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
+                // {
+                //     spdlog::warn("**** Stop requested, wait for current processes to finish.");
+                //     stop = true;
+                // }
 
                 nextRecordIndex = csvParser.getValueAsInt64(SimbadRowProcessor::IndexColumnName).value() + 1;
 
