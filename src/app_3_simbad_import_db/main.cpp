@@ -116,12 +116,13 @@ int main(const int argc, const char *argv[])
 
             while(csvParser.readLine())
             {
-                // if(!stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
-                // {
-                //     spdlog::warn("**** Stop requested, wait for current processes to finish.");
-                //     stop = true;
-                // }
-
+#if __has_include("Windows.h")
+                if(!stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
+                {
+                    spdlog::warn("**** Stop requested, wait for current processes to finish.");
+                    stop = true;
+                }
+#endif
                 nextRecordIndex = csvParser.getValueAsInt64(SimbadRowProcessor::IndexColumnName).value() + 1;
 
                 if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - logTime).count() >= 10)

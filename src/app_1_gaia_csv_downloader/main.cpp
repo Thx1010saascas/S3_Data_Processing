@@ -132,12 +132,13 @@ int main(const int argc, const char *argv[])
         {
             ++fileNumber;
 
-            // if(!_stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
-            // {
-            //     spdlog::warn("**** Stop requested, wait for current processes to finish.");
-            //     _stop = true;
-            // }
-
+#if __has_include("Windows.h")
+            if(!_stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
+            {
+                spdlog::warn("**** Stop requested, wait for current processes to finish.");
+                _stop = true;
+            }
+#endif
             const auto fileName = fileNames[i];
             const auto fileSize = fileSizes[i];
             const auto csvFilePath = (csvPath / fileName);

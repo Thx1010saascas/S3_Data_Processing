@@ -58,12 +58,13 @@ int processCsv(const ThreadData* data)
 
         while(csvParser.readLine())
         {
-            // if(!_stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
-            // {
-            //     spdlog::warn("**** Stop requested, wait for current processes to finish.");
-            //     _stop = true;
-            // }
-
+#if __has_include("Windows.h")
+            if(!_stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
+            {
+                spdlog::warn("**** Stop requested, wait for current processes to finish.");
+                _stop = true;
+            }
+#endif
             _recordsProcessedCount += 1;
             if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - logTime).count() >= 10)
             {

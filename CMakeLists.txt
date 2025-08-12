@@ -7,8 +7,8 @@ set(CMAKE_CXX_STANDARD 20)
 #################################
 # Full paths are required for intellisense to work.
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    set(ThxSoftBase "C:/Programming") # Where Thxsoft libs folder lives.
-    set(VCPKG_ROOT "%HOMEPATH%/.vcpkg-clion/vcpkg")
+    set(ThxSoftBase "$ENV{HOMEDRIVE}/Programming") # Where Thxsoft libs folder lives.
+    set(VCPKG_ROOT "$ENV{HOMEDRIVE}/Users/$ENV{USERNAME}/.vcpkg-clion/vcpkg")
     set(USING_MINGW "1")
 else()
     set(ThxSoftBase "$ENV{HOME}/Programming")

@@ -7,16 +7,16 @@
     "version>=" : "8.10.1"
   }, {
     "name" : "fmt",
-    "version>=" : "11.0.2#1"
+    "version>=" : "11.2.0"
   }, {
     "name" : "gumbo",
     "version>=" : "0.10.1#6"
   }, {
     "name" : "libpq",
-    "version>=" : "16.9"
+    "version>=" : "16.2#1"
   }, {
     "name" : "libpqxx",
-    "version>=" : "7.10.1"
+    "version>=" : "7.9.0"
   }, {
     "name" : "lz4",
     "version>=" : "1.10.0"
@@ -25,7 +25,7 @@
     "version>=" : "3.3.2#1"
   }, {
     "name" : "spdlog",
-    "version>=" : "1.15.0"
+    "version>=" : "1.15.3"
   }, {
     "name" : "sqlite3",
     "version>=" : "3.47.0#2"

@@ -182,7 +182,7 @@ namespace thxsoft::export_s3_sectors
     {
         auto dbTransaction = transaction(*_dbReadConnection);
 
-        const auto result = dbTransaction.exec(std::format("SELECT MAX(id) FROM {};", tableName)).one_row();
+        const auto result = dbTransaction.exec1(std::format("SELECT MAX(id) FROM {};", tableName));
 
         dbTransaction.commit();
 
