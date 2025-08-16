@@ -46,18 +46,11 @@ else()
 endif()
 
 set(AppInstallers "${ThxSoftBase}/Installers")
-set(ThxSoftLibrary "${ThxSoftBase}/Libs/${CMAKE_HOST_SYSTEM_NAME}/${VCPKG_TRIPLET}/${BUILD_TYPE}")
-set(ThxSoftIncludes "${ThxSoftLibrary}/Include")
-set(ThxSoftLibs "${ThxSoftLibrary}/Lib")
-set(ThxSoftDLLs "${ThxSoftLibrary}/Bin")
 
 message("ThsSoftLibrary: ${ThxSoftLibrary}")
 
 set(VCPKG_TARGET_TRIPLET ${VCPKG_TRIPLET})
 set(VCPKG_TARGET_HOST_TRIPLET ${VCPKG_TRIPLET})
-
-link_directories("${ThxSoftLibs}")
-include_directories("${ThxSoftIncludes}")
 
 include("${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 include_directories("${VCPKG_ROOT}/installed/${VCPKG_TRIPLET}/include")

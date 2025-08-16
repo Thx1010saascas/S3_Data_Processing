@@ -14,24 +14,13 @@ find_package(spdlog REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
-include("${ThxSoftLibrary}/cmake/thxsoft_astronomy/thxsoft_astronomyTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_astronomy")
-include("${ThxSoftLibrary}/cmake/thxsoft_common/thxsoft_commonTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_common")
-include("${ThxSoftLibrary}/cmake/thxsoft_database/thxsoft_databaseTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_database")
-include("${ThxSoftLibrary}/cmake/thxsoft_database_postgres/thxsoft_database_postgresTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_database_postgres")
-include("${ThxSoftLibrary}/cmake/thxsoft_database_sqlite/thxsoft_database_sqliteTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_database_sqlite")
-
 target_link_libraries(${TARGET_NAME}
         PRIVATE
-        thxsoft_astronomy::thxsoft_astronomy
-        thxsoft_common::thxsoft_common
-        thxsoft_database::thxsoft_database
-        thxsoft_database_postgres::thxsoft_database_postgres
-        thxsoft_database_sqlite::thxsoft_database_sqlite
+        thxsoft_astronomy
+        thxsoft_common
+        thxsoft_database
+        thxsoft_database_postgres
+        thxsoft_database_sqlite
         spdlog::spdlog_header_only
         unofficial::sqlite3::sqlite3
         libpqxx::pqxx

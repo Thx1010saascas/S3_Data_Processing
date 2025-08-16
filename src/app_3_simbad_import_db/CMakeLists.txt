@@ -13,24 +13,13 @@ find_package(spdlog REQUIRED)
 find_package(CURL CONFIG REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)
 
-include("${ThxSoftLibrary}/cmake/thxsoft_astronomy/thxsoft_astronomyTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_astronomy")
-include("${ThxSoftLibrary}/cmake/thxsoft_common/thxsoft_commonTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_common")
-include("${ThxSoftLibrary}/cmake/thxsoft_database/thxsoft_databaseTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_database")
-include("${ThxSoftLibrary}/cmake/thxsoft_database_postgres/thxsoft_database_postgresTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_database_postgres")
-include("${ThxSoftLibrary}/cmake/thxsoft_web/thxsoft_webTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_web")
-
 target_link_libraries(${TARGET_NAME}
         PRIVATE
-        thxsoft_astronomy::thxsoft_astronomy
-        thxsoft_common::thxsoft_common
-        thxsoft_database::thxsoft_database
-        thxsoft_database_postgres::thxsoft_database_postgres
-        thxsoft_web::thxsoft_web
+        thxsoft_astronomy
+        thxsoft_common
+        thxsoft_database
+        thxsoft_database_postgres
+        thxsoft_web
         spdlog::spdlog_header_only
         CURL::libcurl
         libpqxx::pqxx

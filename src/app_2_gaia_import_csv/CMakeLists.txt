@@ -15,22 +15,11 @@ find_package(fmt REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 
-include("${ThxSoftLibrary}/cmake/thxsoft_astronomy/thxsoft_astronomyTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_astronomy")
-include("${ThxSoftLibrary}/cmake/thxsoft_compression/thxsoft_compressionTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_compression")
-include("${ThxSoftLibrary}/cmake/thxsoft_common/thxsoft_commonTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_common")
-include("${ThxSoftLibrary}/cmake/thxsoft_database/thxsoft_databaseTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_database")
-include("${ThxSoftLibrary}/cmake/thxsoft_database_postgres/thxsoft_database_postgresTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_database_postgres")
-
 target_link_libraries(${TARGET_NAME}
         PRIVATE
-        thxsoft_database_postgres::thxsoft_database_postgres
-        thxsoft_compression::thxsoft_compression
-        thxsoft_astronomy::thxsoft_astronomy
+        thxsoft_database_postgres
+        thxsoft_compression
+        thxsoft_astronomy
         spdlog::spdlog_header_only
         libpqxx::pqxx
         fmt::fmt-header-only

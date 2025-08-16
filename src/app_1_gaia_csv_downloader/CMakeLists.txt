@@ -9,15 +9,10 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(CURL CONFIG REQUIRED)
 find_package(unofficial-gumbo CONFIG REQUIRED)
 
-include("${ThxSoftLibrary}/cmake/thxsoft_common/thxsoft_commonTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_common")
-include("${ThxSoftLibrary}/cmake/thxsoft_web/thxsoft_webTargets.cmake")
-include_directories("${ThxSoftIncludes}/thxsoft_web")
-
 target_link_libraries(${TARGET_NAME}
         PRIVATE
-        thxsoft_common::thxsoft_common
-        thxsoft_web::thxsoft_web
+        thxsoft_common
+        thxsoft_web
         spdlog::spdlog_header_only
         CURL::libcurl
         unofficial::gumbo::gumbo)

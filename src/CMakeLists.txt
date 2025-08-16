@@ -4,3 +4,12 @@ add_subdirectory(app_3_simbad_import_db)
 add_subdirectory(app_4_export_data_fixer)
 add_subdirectory(app_5_export_s3_sectors)
 
+add_subdirectory(thxsoft_astronomy)
+add_subdirectory(thxsoft_common)
+add_subdirectory(thxsoft_compression)
+add_subdirectory(thxsoft_database)
+add_subdirectory(thxsoft_database_postgres)
+add_subdirectory(thxsoft_database_sqlite)
+add_subdirectory(thxsoft_web)
+
+
