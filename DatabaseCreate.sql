@@ -1,5 +1,8 @@
-create database star_data
-    with owner postgres;
+--create database star_data    with owner postgres;
+
+--create extension postgis;
+
+drop table if exists public.simbad;
 
 create table public.simbad
 (
@@ -47,30 +50,77 @@ create table public.simbad
 alter table public.simbad
     owner to postgres;
 
-create index "simbad_lower(name)_index"
-    on public.simbad (lower(name1));
+create index if not exists "simbad_lower(name)_index" on public.simbad (lower(name));
+create index if not exists simbad_distance_ly_index on public.simbad (distance_ly);
+create index if not exists simbad_name_index on public.simbad (name);
+create index if not exists simbad_g_source_id_index on public.simbad (g_source_id);
+create index if not exists simbad_geom_idx on public.simbad using gist (geom public.gist_geometry_ops_nd);
+create unique index if not exists simbad_index_uindex on public.simbad (index);
+create index if not exists simbad_teff_index on public.simbad (teff);
+create index if not exists simbad_object_type_index on public.simbad (object_type);
 
-create index simbad_distance_ly_index
-    on public.simbad (distance_ly);
+drop function if exists public.trg_cartesian_update();
+create function public.trg_cartesian_update() returns trigger
+    language plpgsql
+as
+$$
+DECLARE
+    lat float8;
+    lon float8;
+BEGIN
+    lat := Radians(NEW.glat);
+    lon := Radians(NEW.glon);
 
-create index simbad_name_index
-    on public.simbad (name);
+    NEW.x := (NEW.distance_ly * Cos(lon) * Cos(lat));
+    NEW.y := (NEW.distance_ly * Cos(lon) * Sin(lat));
+    NEW.z := (NEW.distance_ly * Sin(lon));
 
-create index simbad_g_source_id_index
-    on public.simbad (g_source_id);
+    -- Only be Sag A* which is 0,0,0.
+    if NEW.distance_ly > 0 THEN
+        NEW.x := NEW.x - 26669.9;
+        NEW.y := NEW.y - -55.8;
+        NEW.z := NEW.z;
+    end if;
 
-create index simbad_geom_idx
-    on public.simbad using gist (geom public.gist_geometry_ops_nd);
+    RETURN NEW;
+END
+$$;
 
-create unique index simbad_index_uindex
-    on public.simbad (index);
+alter function public.trg_cartesian_update() owner to postgres;
 
-create index simbad_teff_index
-    on public.simbad (teff);
+drop function if exists public.trg_geom_default();
+create function public.trg_geom_default() returns trigger
+    language plpgsql
+as
+$$
+BEGIN
+    NEW.geom := ST_PointZ(NEW.x, NEW.y, NEW.z);
 
-create index simbad_object_type_index
-    on public.simbad (object_type);
+    RETURN NEW;
+END
+$$;
 
+alter function public.trg_geom_default() owner to postgres;
+
+drop function if exists public.trg_ly_default();
+create function public.trg_ly_default() returns trigger
+    language plpgsql
+as
+$$
+BEGIN
+    if NEW.parallax = 0 THEN
+        NEW.distance_ly = 0;
+    else
+        NEW.distance_ly := (1000.0 / NEW.parallax * 3.26156378);
+    end if;
+
+    RETURN NEW;
+END
+$$;
+
+alter function public.trg_ly_default() owner to postgres;
+
+drop trigger if exists a_ly_default_simbad on public.simbad;
 create trigger a_ly_default_simbad
     before insert or update
     on public.simbad
@@ -78,6 +128,7 @@ create trigger a_ly_default_simbad
     when (new.distance_ly IS NOT NULL AND new.parallax IS NOT NULL)
 execute procedure public.trg_ly_default();
 
+drop trigger if exists c_cartesian_insert on public.simbad;
 create trigger c_cartesian_insert
     before insert
     on public.simbad
@@ -85,6 +136,7 @@ create trigger c_cartesian_insert
     when (new.x IS NOT NULL AND new.y IS NOT NULL AND new.z IS NOT NULL)
 execute procedure public.trg_geom_default();
 
+drop trigger if exists c_cartesian_update on public .simbad;
 create trigger c_cartesian_update
     before update
     on public.simbad
@@ -92,6 +144,7 @@ create trigger c_cartesian_update
     when (new.x IS NOT NULL AND new.y IS NOT NULL AND new.z IS NOT NULL)
 execute procedure public.trg_geom_default();
 
+drop trigger if exists b_gcoord_insert on public.simbad;
 create trigger b_gcoord_insert
     before insert
     on public.simbad
@@ -99,6 +152,7 @@ create trigger b_gcoord_insert
     when (new.glat IS NOT NULL AND new.glon IS NOT NULL AND new.distance_ly IS NOT NULL)
 execute procedure public.trg_cartesian_update();
 
+drop trigger if exists b_gcoord_update on public.simbad;
 create trigger b_gcoord_update
     before update
     on public.simbad
@@ -106,7 +160,7 @@ create trigger b_gcoord_update
     when (new.glat IS NOT NULL AND new.glon IS NOT NULL AND new.distance_ly IS NOT NULL)
 execute procedure public.trg_cartesian_update();
 
-
+drop table if exists public.export_overrides;
 create table public.export_overrides
 (
     index             bigint not null
@@ -122,6 +176,7 @@ create table public.export_overrides
 alter table public.export_overrides
     owner to postgres;
 
+drop table if exists public.gaia;
 create table public.gaia
 (
     id               bigserial
@@ -154,21 +209,13 @@ create table public.gaia
 )
     with (autovacuum_enabled = on, fillfactor = 70);
 
-alter table public.gaia
-    owner to postgres;
+alter table public.gaia  owner to postgres;
+create unique index gaia_index_idx on public.gaia (index);
+create index gaia_source_id_idx on public.gaia (source_id);
+create index gaia_distance_ly_idx on public.gaia (distance_ly);
+create index gaia_geom_idx on public.gaia using gist (geom public.gist_geometry_ops_nd);
 
-create unique index gaia_index_idx
-    on public.gaia (index);
-
-create index gaia_source_id_idx
-    on public.gaia (source_id);
-
-create index gaia_distance_ly_idx
-    on public.gaia (distance_ly);
-
-create index gaia_geom_idx
-    on public.gaia using gist (geom public.gist_geometry_ops_nd);
-
+drop trigger if exists c_cartesian_update on public.gaia;
 create trigger c_cartesian_update
     before update
     on public.gaia
@@ -176,6 +223,7 @@ create trigger c_cartesian_update
     when (new.x IS NOT NULL AND new.y IS NOT NULL AND new.z IS NOT NULL)
 execute procedure public.trg_geom_default();
 
+drop trigger if exists c_cartesian_insert on public.gaia;
 create trigger c_cartesian_insert
     before insert
     on public.gaia
@@ -183,6 +231,7 @@ create trigger c_cartesian_insert
     when (new.x IS NOT NULL AND new.y IS NOT NULL AND new.z IS NOT NULL)
 execute procedure public.trg_geom_default();
 
+drop trigger if exists b_gcoord_insert on public.gaia;
 create trigger b_gcoord_insert
     before insert
     on public.gaia
@@ -190,6 +239,7 @@ create trigger b_gcoord_insert
     when (new.glat IS NOT NULL AND new.glon IS NOT NULL AND new.distance_ly IS NOT NULL)
 execute procedure public.trg_cartesian_update();
 
+drop trigger if exists b_gcoord_update on public.gaia;
 create trigger b_gcoord_update
     before update
     on public.gaia
@@ -197,6 +247,7 @@ create trigger b_gcoord_update
     when (new.glat IS NOT NULL AND new.glon IS NOT NULL AND new.distance_ly IS NOT NULL)
 execute procedure public.trg_cartesian_update();
 
+drop trigger if exists a_ly_default on public.gaia;
 create trigger a_ly_default
     before insert or update
     on public.gaia

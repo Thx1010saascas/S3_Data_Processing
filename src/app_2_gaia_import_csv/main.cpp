@@ -1,7 +1,6 @@
 #include <atomic>
 #include <fstream>
 #include <iostream>
-#include <Compression.h>
 #include "Thx.h"
 #include "CsvParser.h"
 #include "ExportToSql.h"
@@ -9,14 +8,21 @@
 #include "ExportProgressManager.h"
 #include "GaiaRowProcessor.h"
 #include "LoggingSetup.h"
+#include <Compression.h>
 
 void showSyntax();
 
-static bool _stop;
-static std::string _postgresCnxString;
-static std::atomic<long long> _recordsProcessedCount;
-static std::atomic<long long>  _recordsAddedCount;
-static double _minParallax;
+static bool g_stopProcessing;
+static std::string g_postgresCnxString;
+static std::atomic<long long> g_recordsProcessedCount;
+static std::atomic<long long>  g_recordsAddedCount;
+static double g_minParallax;
+
+void stop()
+{
+    spdlog::warn("**** Stop requested, wait for current processes to finish.");
+    g_stopProcessing = true;
+}
 
 struct ThreadData
 {
@@ -43,7 +49,7 @@ int processCsv(const ThreadData* data)
     {
         spdlog::info("Processing file #{:L} {}.", data->filesProcessedCount, data->fileName);
 
-        const auto dataStream = Compression::decompress(data->csvFilePath, data->decompressPath, true, 2000000000);
+        const auto dataStream = Compression::decompressToStream(data->csvFilePath, data->decompressPath);
 
         auto csvParser = CsvParser(dataStream);
 
@@ -54,29 +60,22 @@ int processCsv(const ThreadData* data)
 
         auto logTime = std::chrono::steady_clock::now();
 
-        const ExportToSql dbWriter(_postgresCnxString);
+        const ExportToSql dbWriter(g_postgresCnxString);
 
         while(csvParser.readLine())
         {
-#if __has_include("Windows.h")
-            if(!_stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
-            {
-                spdlog::warn("**** Stop requested, wait for current processes to finish.");
-                _stop = true;
-            }
-#endif
-            _recordsProcessedCount += 1;
+            g_recordsProcessedCount += 1;
             if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - logTime).count() >= 10)
             {
-                spdlog::info("Processed {:L}, added {:L} in {}.", _recordsProcessedCount.load(), _recordsAddedCount.load(), Thx::toDurationString(data->startTime));
+                spdlog::info("Processed {:L}, added {:L} in {}.", g_recordsProcessedCount.load(), g_recordsAddedCount.load(), Thx::toDurationString(data->startTime));
 
                 logTime = std::chrono::steady_clock::now();
             }
 
-            if(!GaiaRowProcessor::processRow(_minParallax, csvParser))
+            if(!GaiaRowProcessor::processRow(g_minParallax, csvParser))
                 continue;
 
-            _recordsAddedCount += 1;
+            g_recordsAddedCount += 1;
 
             dbWriter.append(csvParser);
         }
@@ -119,11 +118,18 @@ int main(const int argc, const char *argv[])
 
         LoggingSetup::setupDefaultLogging("logs/2_GaiaImportCsvs.log");
 
-        const int MaxThreadLimit = 15;
-        const auto csvPath = argv[1];
-        const auto decompressPath = std::filesystem::current_path() / "Decompress";
-        _postgresCnxString = argv[2];
-        _minParallax = 1.0/(std::stoi(argv[3]) / 3.26156378) * 1000; // Parallax to ly
+#if !__has_include("Windows.h")
+        signal(SIGINT, [] (int signum)
+        {
+            stop();
+        });
+#endif
+
+        constexpr int MaxThreadLimit = 15;
+        const auto csvFolder = argv[1];
+        const auto decompressPath = std::filesystem::temp_directory_path() / "Decompress";
+        g_postgresCnxString = argv[2];
+        g_minParallax = 1.0/(std::stoi(argv[3]) / 3.26156378) * 1000; // Parallax to ly
 
         auto maxThreadCount = argc == 5 ? std::stoi(argv[4]) : 5;
 
@@ -138,7 +144,7 @@ int main(const int argc, const char *argv[])
 
         const auto startTime = std::chrono::steady_clock::now();
 
-        ExportProgressManager exportProgressManager((std::filesystem::path(csvPath) / "ProcessingState.log").string());
+        ExportProgressManager exportProgressManager((std::filesystem::path(csvFolder) / "ProcessingState.log").string());
 
         auto concurrentJobs = std::vector<std::future<int>>();
 
@@ -146,24 +152,27 @@ int main(const int argc, const char *argv[])
 
         auto filesProcessedCount = 0;
 
-        for (const auto& path : std::filesystem::directory_iterator(csvPath))
+        for (const auto& csvFile : std::filesystem::directory_iterator(csvFolder))
         {
-            if(_stop)
-            {
-                break;
-            }
+#if __has_include("Windows.h")
+            if(!g_stopProcessing && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
+                stop();
+#endif
 
-            if(path.is_directory())
+            if(g_stopProcessing)
+                break;
+
+            if(csvFile.is_directory())
                 continue;
 
-            const std::string csvFilePath = path.path().string();
+            const auto& csvFilePath = csvFile.path();
 
-            if(!csvFilePath.ends_with(".gz"))
+            if(csvFilePath.extension().string() != ".gz" || csvFilePath.filename().string().starts_with("."))
                 continue;
 
             filesProcessedCount++;
 
-            const auto fileName = path.path().filename().string();
+            const auto fileName = csvFilePath.filename().string();
 
             if(exportProgressManager.isComplete(fileName))
             {
@@ -180,7 +189,7 @@ int main(const int argc, const char *argv[])
 
         ConcurrentJob::waitForThreadsToFinish(&concurrentJobs);
 
-        spdlog::info("Processed {:L} records in {}.", _recordsProcessedCount.load(), Thx::toDurationString(startTime));
+        spdlog::info("Processed {:L} records in {}.", g_recordsProcessedCount.load(), Thx::toDurationString(startTime));
 
         return 0;
     }

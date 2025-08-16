@@ -20,6 +20,8 @@ endif()
 # End Root Config Settings
 #################################
 
+message("Building for ${CMAKE_HOST_SYSTEM_NAME}.")
+
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     if (USING_MINGW STREQUAL "1")
         set(VCPKG_TRIPLET x64-mingw-static)
@@ -31,7 +33,7 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     endif()
 else()
     if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
-        #set(VCPKG_TRIPLET x64-osx)
+        set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build architectures for macOS")
         set(VCPKG_TRIPLET arm64-osx)
     endif()
 endif()

@@ -1,7 +1,6 @@
 #include <chrono>
 #include <iostream>
 #include <fstream>
-
 #include "ConcurrentJob.h"
 #include "DbQuery.h"
 #include "ExportToSql.h"
@@ -10,9 +9,16 @@
 #include "Thx.h"
 #include "ThxWeb.h"
 
-
 void showSyntax();
 std::string getBaseQuery();
+
+static bool g_stopProcessing;
+
+void stop()
+{
+    spdlog::warn("**** Stop requested, wait for current processes to finish.");
+    g_stopProcessing = true;
+}
 
 // http://simbad.u-strasbg.fr/simbad/sim-tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=csv&QUERY=
 // https://simbad.cds.unistra.fr/simbad/sim-tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=csv&QUERY=
@@ -33,7 +39,7 @@ struct ThreadData
 
 size_t write_data(const char *ptr, const size_t size, const size_t nmemb, void *userdata) {
     auto *stream = static_cast<std::ostream*>(userdata);
-    const size_t count = size * nmemb;
+    const auto count = static_cast<long>(size * nmemb);
     stream->write(ptr, count);
     return count;
 }
@@ -56,6 +62,13 @@ int main(const int argc, const char *argv[])
 
         LoggingSetup::setupDefaultLogging("logs/3_SimbadImportData.log");
 
+#if !__has_include("Windows.h")
+        signal(SIGINT, [] (int signum)
+        {
+            stop();
+        });
+#endif
+
         const auto simbadUrl = std::string(argv[1]);
         const auto *const postgresCnxString = argv[2];
         const auto minParallax = 1.0/(std::stoi(argv[3]) / 3.26156378) * 1000; // Parallax to ly
@@ -65,7 +78,6 @@ int main(const int argc, const char *argv[])
         spdlog::info("Importing Simbad data.");
 
         auto logTime = std::chrono::steady_clock::now();
-        auto stop = false;
         const ExportToSql dbWriter(postgresCnxString);
         const DbQuery dbQuery(postgresCnxString);
 
@@ -87,7 +99,7 @@ int main(const int argc, const char *argv[])
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, 300);
         curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 20 * 1024 * 1024);
 
-        while(!stop)
+        while(!g_stopProcessing)
         {
             stringOutputStream->str("");
             stringOutputStream->clear();
@@ -117,11 +129,8 @@ int main(const int argc, const char *argv[])
             while(csvParser.readLine())
             {
 #if __has_include("Windows.h")
-                if(!stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
-                {
-                    spdlog::warn("**** Stop requested, wait for current processes to finish.");
-                    stop = true;
-                }
+                if(!g_stopProcessing && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
+                    stop();
 #endif
                 nextRecordIndex = csvParser.getValueAsInt64(SimbadRowProcessor::IndexColumnName).value() + 1;
 
@@ -141,7 +150,10 @@ int main(const int argc, const char *argv[])
             }
 
             if (csvParser.lineNumber() == 0)
-                stop = true;
+            {
+                spdlog::warn("**** Stopping. Line number is zero.");
+                g_stopProcessing = true;
+            }
         }
 
         dbWriter.commit();

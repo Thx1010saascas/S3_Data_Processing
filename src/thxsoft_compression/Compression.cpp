@@ -5,15 +5,10 @@
 #include <filesystem>
 #include "zlib.h"
 
-std::string Compression::decompress(const std::string& inFilePath, const size_t maxBytes)
+std::string Compression::decompress(const std::string& inFilePath)
 {
     auto inFile = std::ifstream(inFilePath, std::ios::binary | std::ios::in);
-
-    inFile.ignore(std::numeric_limits<std::streamsize>::max() );
-    const auto length = inFile.gcount();
-    inFile.clear();
-    inFile.seekg(0, std::ios_base::beg);
-
+    const auto length = static_cast<long long>(std::filesystem::file_size(inFilePath));
     auto buffer = std::vector<char>(length);
     inFile.read(buffer.data(), length);
 
@@ -22,7 +17,7 @@ std::string Compression::decompress(const std::string& inFilePath, const size_t 
     return output;
 }
 
-std::shared_ptr<std::ifstream> Compression::decompress(const std::string& inFilePath, const std::string& outFilePath, const bool asText, const size_t maxBytes)
+std::shared_ptr<std::ifstream> Compression::decompressToStream(const std::string& inFilePath, const std::string& outFilePath)
 {
     const auto inPath = std::filesystem::path(inFilePath);
     const auto outPath = std::filesystem::path(outFilePath);
@@ -30,22 +25,17 @@ std::shared_ptr<std::ifstream> Compression::decompress(const std::string& inFile
 
     std::ifstream file(inFilePath, std::ios::binary);
 
-    const auto data = decompress(inFilePath, maxBytes);
+    const auto data = decompress(inFilePath);
 
-    auto mode = std::ios::out;
+    auto outFile = std::ofstream(fullOutputFilePath, std::ios::out | std::ios::binary);
 
-    if(!asText)
-        mode |= std::ios::binary;
-
-    auto outFile = std::ofstream(fullOutputFilePath, mode);
-
-    outFile.write(data.c_str(), data.length());
+    outFile.write(data.c_str(), static_cast<long long>(data.length()));
 
     file.close();
     outFile.flush();
     outFile.close();
 
-    auto inFile = std::make_shared<std::ifstream>(std::ifstream(fullOutputFilePath, mode));
+    auto inFile = std::make_shared<std::ifstream>(std::ifstream(fullOutputFilePath, std::ios::in | std::ios::binary));
 
     return inFile;
 }

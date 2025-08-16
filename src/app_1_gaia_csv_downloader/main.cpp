@@ -12,9 +12,16 @@
 #include "LoggingSetup.h"
 #include "Thx.h"
 
-static bool _stop;
+
+static bool g_stopProcessing;
 void getCsvDownloads(const std::string& url, std::vector<std::string>& fileLinks, std::vector<int>& fileSizes);
 void showSyntax();
+
+void stop()
+{
+    spdlog::warn("**** Stop requested, wait for current processes to finish.");
+    g_stopProcessing = true;
+}
 
 struct ThreadData
 {
@@ -56,7 +63,7 @@ void find_definitions(std::vector<std::string>& links, std::vector<int>& sizes, 
 }
 size_t write_data(const char *ptr, const size_t size, const size_t nmemb, void *userdata) {
     auto *stream = static_cast<std::ostream*>(userdata);
-    const size_t count = size * nmemb;
+    const auto count = static_cast<long>(size * nmemb);
     stream->write(ptr, count);
     return count;
 }
@@ -109,6 +116,13 @@ int main(const int argc, const char *argv[])
 
         LoggingSetup::setupDefaultLogging("logs/1_GaiaCsvDownloader.log");
 
+#if !__has_include("Windows.h")
+        signal(SIGINT, [] (int signum)
+        {
+            stop();
+        });
+#endif
+
         const auto url = std::filesystem::path(argv[1]);
         const auto csvPath = std::filesystem::path(argv[2]);
         const auto maxConcurrentDownloads = argc == 4 ? std::stol(argv[3]) : 50;
@@ -130,16 +144,17 @@ int main(const int argc, const char *argv[])
 
         for(auto i=0; i<fileNames.size(); ++i)
         {
+#if __has_include("Windows.h")
+            if(!g_stopProcessing && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
+                stop();
+#endif
+
+            if(g_stopProcessing)
+                break;
+
             ++fileNumber;
 
-#if __has_include("Windows.h")
-            if(!_stop && GetAsyncKeyState(VK_CONTROL) < 0 && GetAsyncKeyState(0x58) < 0)
-            {
-                spdlog::warn("**** Stop requested, wait for current processes to finish.");
-                _stop = true;
-            }
-#endif
-            const auto fileName = fileNames[i];
+            const auto& fileName = fileNames[i];
             const auto fileSize = fileSizes[i];
             const auto csvFilePath = (csvPath / fileName);
             const auto fileLink = (url / fileName);
@@ -160,7 +175,7 @@ int main(const int argc, const char *argv[])
 
             concurrentJobs.push_back(async(std::launch::async, downloadCsv, data));
 
-            ConcurrentJob::waitForAvailableThread(&concurrentJobs, maxConcurrentDownloads);
+            ConcurrentJob::waitForAvailableThread(&concurrentJobs, static_cast<int32_t>(maxConcurrentDownloads));
         }
 
         ConcurrentJob::waitForThreadsToFinish(&concurrentJobs);
