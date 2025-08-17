@@ -14,7 +14,7 @@ int main(const int argc, const char *argv[])
 #ifdef  __MINGW32__
     Thx::setCustomLocale();
 #else
-    std::locale::global(std::locale("e_AU"));
+    std::locale::global(std::locale("en_AU"));
 #endif
 
     try
